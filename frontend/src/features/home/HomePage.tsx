@@ -1,15 +1,34 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { InfoBanner, PageHeader } from '@/components/ui/feedback'
-import { useMe } from '@/features/auth/useAuth'
+import { Link } from 'react-router'
+import { Button } from '@/components/ui/button'
+import { useApprovalSummary } from '@/features/approvals/queries'
+import { hasRole, useMe } from '@/features/auth/useAuth'
 import { ROLE_LABEL } from '@/lib/format'
 
 export function HomePage() {
   const { data: user } = useMe()
   const roles = (user?.roles ?? []).filter((r) => r.status === 'ACTIVE')
+  const isOwner = hasRole(user, 'OWNER')
+  const summary = useApprovalSummary(isOwner || hasRole(user, 'FINANCE'))
+  const waiting = summary.data?.data.waiting_my_decision ?? 0
+  const returned = summary.data?.data.returned_to_me ?? 0
 
   return (
     <div className="max-w-4xl space-y-6">
       <PageHeader title={`Selamat datang, ${user?.name ?? ''}`} purpose="Ringkasan akun Anda dan apa yang bisa Anda kerjakan di sini." />
+
+      {(waiting > 0 || returned > 0) && (
+        <Card className="border-amber-500/50">
+          <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-6">
+            <div>
+              {waiting > 0 && <p className="font-medium">{waiting} pengajuan menunggu keputusan Anda.</p>}
+              {returned > 0 && <p className="font-medium">{returned} pengajuan Anda dikembalikan untuk diperbaiki.</p>}
+            </div>
+            <Button asChild><Link to="/persetujuan">Buka persetujuan</Link></Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -36,8 +55,8 @@ export function HomePage() {
       </Card>
 
       <InfoBanner>
-        Aplikasi ini sedang dibangun bertahap. Yang sudah tersedia: data barang, satuan, gudang dan outlet, pengguna
-        dan peran, serta jejak audit. Kasir, stok, produksi, pembelian, kas, dan laporan menyusul di tahap berikutnya.
+        Aplikasi ini sedang dibangun bertahap. Yang sudah tersedia: data barang dan harga jual menu, satuan, supplier,
+        metode bayar, kategori biaya, gudang dan outlet, pengguna dan peran, persetujuan, serta jejak audit. Kasir, stok, produksi, pembelian, kas, dan laporan menyusul di tahap berikutnya.
       </InfoBanner>
     </div>
   )

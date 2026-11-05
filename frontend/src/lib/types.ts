@@ -39,6 +39,7 @@ export type ItemSummary = {
   item_type: ItemType
   is_active: boolean
   base_unit: Unit
+  current_price?: number | null
 }
 
 export type ItemUnit = {
@@ -55,6 +56,74 @@ export type ItemDetail = ItemSummary & {
   notes: string | null
   units: ItemUnit[]
   min_stocks: { location_id: number; location_code: string; location_name: string; min_qty: string }[]
+  price: ItemPriceInfo | null
+}
+
+export type ItemPriceRow = {
+  id: number
+  /** Jadwal yang digantikan keputusan lebih baru sebelum berlaku. */
+  superseded: boolean
+  price: number
+  effective_from: string
+  set_by: { id: number; name: string } | null
+  approval_number: string | null
+  reason: string | null
+  created_at: string
+}
+
+export type PriceProposal = { price: number; effective_date: string | null; previous_price: number | null }
+
+export type ItemPriceInfo = {
+  current: ItemPriceRow | null
+  upcoming: ItemPriceRow[]
+  history: ItemPriceRow[]
+  open_request: {
+    id: number
+    number: string
+    status: ApprovalStatus
+    payload: PriceProposal
+    requester: { id: number; name: string } | null
+  } | null
+}
+
+export type Supplier = {
+  id: number
+  code: string
+  name: string
+  contact_name: string | null
+  phone: string | null
+  address: string | null
+  payment_term_days: number
+  bank_account: string | null
+  notes: string | null
+  is_active: boolean
+}
+
+export type SimpleMaster = { id: number; code: string; name: string; is_active: boolean; is_cash?: boolean }
+
+export type ApprovalStatus = 'PENDING' | 'RETURNED' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
+export type ApprovalAction = 'SUBMITTED' | 'RESUBMITTED' | 'APPROVED' | 'REJECTED' | 'RETURNED' | 'CANCELLED'
+
+type PersonRef = { id: number; name: string; username: string }
+
+export type Approval = {
+  id: number
+  number: string
+  type: 'ITEM_PRICE'
+  status: ApprovalStatus
+  title: string
+  summary: string
+  subject: { type: string; id: number }
+  payload: PriceProposal
+  reason: string | null
+  requester: PersonRef | null
+  requester_role: { code: RoleCode; name: string } | null
+  submitted_at: string
+  decider: PersonRef | null
+  decided_at: string | null
+  decision_note: string | null
+  can: { decide: boolean; resubmit: boolean; cancel: boolean }
+  events: { action: ApprovalAction; user: PersonRef | null; note: string | null; created_at: string }[] | null
 }
 
 export type AuditLog = {

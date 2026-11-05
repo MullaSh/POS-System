@@ -1,4 +1,4 @@
-import type { ItemType, LocationStatus, RoleCode } from './types'
+import type { ApprovalAction, ApprovalStatus, ItemType, LocationStatus, RoleCode } from './types'
 
 const dateTime = new Intl.DateTimeFormat('id-ID', {
   day: '2-digit',
@@ -20,6 +20,45 @@ const qty = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 4 })
 /** Jumlah tanpa nol berlebih, mis. "1000.0000" → "1.000", "0.5000" → "0,5". */
 export function formatQty(value: string | number): string {
   return qty.format(Number(value))
+}
+
+const rupiah = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 })
+
+/** Rupiah tanpa desimal, mis. 25000 → "Rp25.000" (dokumen 12 §2.3). */
+export function formatRupiah(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '–'
+  return `Rp${rupiah.format(value)}`
+}
+
+const dateOnly = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Jakarta' })
+
+/** Tanggal saja (WIB), DD/MM/YYYY. Menerima "2026-12-01" atau waktu lengkap. */
+export function formatDate(value: string | null | undefined): string {
+  if (!value) return '–'
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00+07:00`) : new Date(value)
+  return dateOnly.format(d)
+}
+
+/** Hari ini menurut WIB dalam format YYYY-MM-DD (untuk input tanggal). */
+export function todayWib(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date())
+}
+
+export const APPROVAL_STATUS_LABEL: Record<ApprovalStatus, string> = {
+  PENDING: 'Menunggu keputusan',
+  RETURNED: 'Dikembalikan untuk diperbaiki',
+  APPROVED: 'Disetujui',
+  REJECTED: 'Ditolak',
+  CANCELLED: 'Dibatalkan',
+}
+
+export const APPROVAL_ACTION_LABEL: Record<ApprovalAction, string> = {
+  SUBMITTED: 'Diajukan',
+  RESUBMITTED: 'Diajukan ulang',
+  APPROVED: 'Disetujui',
+  REJECTED: 'Ditolak',
+  RETURNED: 'Dikembalikan',
+  CANCELLED: 'Dibatalkan',
 }
 
 export const ROLE_LABEL: Record<RoleCode, string> = {
@@ -71,6 +110,25 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   ITEM_DEACTIVATED: 'Nonaktifkan barang',
   ITEM_UNITS_CHANGED: 'Ubah konversi satuan',
   ITEM_MIN_STOCK_CHANGED: 'Ubah stok minimum',
+  ITEM_PRICE_SET: 'Harga jual ditetapkan',
+  SUPPLIER_CREATED: 'Buat supplier',
+  SUPPLIER_UPDATED: 'Ubah supplier',
+  SUPPLIER_ACTIVATED: 'Aktifkan supplier',
+  SUPPLIER_DEACTIVATED: 'Nonaktifkan supplier',
+  PAYMENT_METHOD_CREATED: 'Buat metode bayar',
+  PAYMENT_METHOD_UPDATED: 'Ubah metode bayar',
+  PAYMENT_METHOD_ACTIVATED: 'Aktifkan metode bayar',
+  PAYMENT_METHOD_DEACTIVATED: 'Nonaktifkan metode bayar',
+  EXPENSE_CATEGORY_CREATED: 'Buat kategori biaya',
+  EXPENSE_CATEGORY_UPDATED: 'Ubah kategori biaya',
+  EXPENSE_CATEGORY_ACTIVATED: 'Aktifkan kategori biaya',
+  EXPENSE_CATEGORY_DEACTIVATED: 'Nonaktifkan kategori biaya',
+  APPROVAL_SUBMITTED: 'Pengajuan dibuat',
+  APPROVAL_RESUBMITTED: 'Pengajuan diajukan ulang',
+  APPROVAL_APPROVED: 'Pengajuan disetujui',
+  APPROVAL_REJECTED: 'Pengajuan ditolak',
+  APPROVAL_RETURNED: 'Pengajuan dikembalikan',
+  APPROVAL_CANCELLED: 'Pengajuan dibatalkan',
 }
 
 export function auditActionLabel(action: string): string {

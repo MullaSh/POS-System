@@ -7,9 +7,9 @@ import { hasRole, useMe } from './useAuth'
 
 /**
  * Halaman yang butuh login. Bila wajib ganti kata sandi, user diarahkan ke
- * halaman ganti kata sandi lebih dulu. `role` membatasi halaman untuk satu peran.
+ * halaman ganti kata sandi lebih dulu. `role` membatasi halaman untuk satu peran atau beberapa peran.
  */
-export function RequireAuth({ children, role }: { children: ReactNode; role?: RoleCode }) {
+export function RequireAuth({ children, role }: { children: ReactNode; role?: RoleCode | RoleCode[] }) {
   const { data: user, isPending, error } = useMe()
   const location = useLocation()
 
@@ -19,7 +19,7 @@ export function RequireAuth({ children, role }: { children: ReactNode; role?: Ro
   if (user.must_change_password && location.pathname !== '/ganti-kata-sandi') {
     return <Navigate to="/ganti-kata-sandi" replace />
   }
-  if (role && !hasRole(user, role)) {
+  if (role && !(Array.isArray(role) ? role : [role]).some((r) => hasRole(user, r))) {
     return (
       <div className="p-6">
         <ErrorAlert message="Halaman ini hanya untuk peran tertentu. Anda tidak memiliki izin membukanya." />

@@ -144,8 +144,12 @@ class ItemController
     /** @return array<string, mixed> */
     private function presentPrice(Item $item): array
     {
+        $all = $item->prices()->with(['setter:id,name', 'approvalRequest:id,number'])->orderByDesc('id')->get();
+        // Harga terjadwal yang digantikan keputusan lebih baru sebelum tanggalnya tidak pernah berlaku.
+        $superseded = fn (ItemPrice $p) => $all->contains(fn (ItemPrice $later) => $later->id > $p->id && $later->effective_from <= $p->effective_from);
         $row = fn (ItemPrice $p) => [
             'id' => $p->id,
+            'superseded' => $superseded($p),
             'price' => $p->price,
             'effective_from' => $p->effective_from,
             'set_by' => $p->setter?->only(['id', 'name']),
@@ -158,7 +162,7 @@ class ItemController
         return [
             'current' => ($c = $this->prices->current($item)) ? $row($c) : null,
             'upcoming' => $this->prices->upcoming($item)->map($row)->values(),
-            'history' => $item->prices()->with(['setter:id,name', 'approvalRequest:id,number'])->orderByDesc('id')->limit(50)->get()->map($row)->values(),
+            'history' => $all->take(50)->map($row)->values(),
             'open_request' => $open ? [
                 'id' => $open->id,
                 'number' => $open->number,

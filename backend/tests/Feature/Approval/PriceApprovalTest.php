@@ -178,7 +178,10 @@ class PriceApprovalTest extends TestCase
         $this->postJson("/api/v1/items/{$this->menu->id}/prices", ['price' => 27000, 'effective_date' => '2026-12-01'])->assertCreated();
         $this->postJson("/api/v1/items/{$this->menu->id}/prices", ['price' => 24000])->assertCreated();
 
-        $this->getJson("/api/v1/items/{$this->menu->id}")->assertJsonCount(0, 'data.price.upcoming');
+        $this->getJson("/api/v1/items/{$this->menu->id}")
+            ->assertJsonCount(0, 'data.price.upcoming')
+            ->assertJsonPath('data.price.history.0.superseded', false)
+            ->assertJsonPath('data.price.history.1.superseded', true);
         $this->travelTo(Carbon::create(2026, 12, 2, 9, 0, 0, 'Asia/Jakarta'));
         $this->assertSame(24000, $this->currentPrice());
     }

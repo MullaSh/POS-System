@@ -1,6 +1,7 @@
 import { KeyRound, LogOut } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
+import { useApprovalSummary } from '@/features/approvals/queries'
 import { hasRole, useLogout, useMe } from '@/features/auth/useAuth'
 import { ROLE_LABEL } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -15,6 +16,10 @@ export function AppLayout() {
     ...g,
     items: g.items.filter((i) => !i.roles || i.roles.some((r) => hasRole(user, r))),
   })).filter((g) => g.items.length > 0)
+
+  const canSeeApprovals = hasRole(user, 'OWNER') || hasRole(user, 'FINANCE')
+  const summary = useApprovalSummary(canSeeApprovals)
+  const approvalCount = (summary.data?.data.waiting_my_decision ?? 0) + (summary.data?.data.returned_to_me ?? 0)
 
   const roleNames = (user?.roles ?? []).filter((r) => r.status === 'ACTIVE').map((r) => ROLE_LABEL[r.code])
 
@@ -41,6 +46,14 @@ export function AppLayout() {
                     >
                       <i.icon className="size-4" />
                       {i.label}
+                      {i.badge === 'approvals' && approvalCount > 0 && (
+                        <span
+                          aria-label={`${approvalCount} perlu perhatian`}
+                          className="ml-auto rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-white"
+                        >
+                          {approvalCount}
+                        </span>
+                      )}
                     </NavLink>
                   </li>
                 ))}

@@ -13,6 +13,7 @@ import { hasRole, useMe } from '@/features/auth/useAuth'
 import { ApiError, errorText, http } from '@/lib/api'
 import { formatQty, ITEM_TYPE_LABEL } from '@/lib/format'
 import type { ItemDetail, Location } from '@/lib/types'
+import { PriceCard } from './PriceCard'
 import { ITEMS_KEY, useUnits } from './queries'
 import { toUnitPayload, type UnitRow } from './unitRows'
 import { UnitRowsEditor } from './UnitRowsEditor'
@@ -42,6 +43,7 @@ export function ItemDetailPage() {
         {it.notes && <> · {it.notes}</>}
       </p>
 
+      {it.price && <PriceCard item={it} />}
       {isOwner && <EditBasics item={it} />}
       <Conversions item={it} canEdit={isOwner} />
       {it.is_stock_item && <MinStocks item={it} canEdit={isOwner} />}

@@ -12,7 +12,7 @@ import { Select } from '@/components/ui/select'
 import { EmptyRow, Table, Td, Th } from '@/components/ui/table'
 import { hasRole, useMe } from '@/features/auth/useAuth'
 import { ApiError, errorText, http } from '@/lib/api'
-import { ITEM_TYPE_LABEL } from '@/lib/format'
+import { formatRupiah, ITEM_TYPE_LABEL } from '@/lib/format'
 import type { ItemDetail, ItemSummary, ItemType, Paginated } from '@/lib/types'
 import { ITEMS_KEY, useUnits } from './queries'
 import { toUnitPayload, type UnitRow } from './unitRows'
@@ -78,11 +78,12 @@ export function ItemsPage() {
               <Th>Nama</Th>
               <Th>Jenis</Th>
               <Th>Satuan dasar</Th>
+              <Th className="text-right">Harga jual</Th>
               <Th>Status</Th>
             </tr>
           </thead>
           <tbody>
-            {items.data.data.length === 0 && <EmptyRow colSpan={5}>Tidak ada barang yang cocok.</EmptyRow>}
+            {items.data.data.length === 0 && <EmptyRow colSpan={6}>Tidak ada barang yang cocok.</EmptyRow>}
             {items.data.data.map((i) => (
               <tr key={i.id}>
                 <Td className="font-mono text-xs">{i.code}</Td>
@@ -91,6 +92,7 @@ export function ItemsPage() {
                 </Td>
                 <Td>{ITEM_TYPE_LABEL[i.item_type]}</Td>
                 <Td>{i.base_unit.code}</Td>
+                <Td className="text-right">{i.item_type === 'MENU' ? formatRupiah(i.current_price) : ''}</Td>
                 <Td>{i.is_active ? <Badge variant="success">Aktif</Badge> : <Badge>Nonaktif</Badge>}</Td>
               </tr>
             ))}
