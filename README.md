@@ -74,5 +74,6 @@ menyentuh kode).
 | --- | --- | --- |
 | 0 | Setup proyek, halaman login awal, tes otomatis, Docker | Selesai |
 | 1 | Login, user dan peran, lokasi, data master barang, audit trail | Selesai |
-| 2 | Supplier, metode bayar, kategori biaya, harga jual + persetujuan, delegasi | Berikutnya |
-| 3–9 | Resep, stok, POS, kas, pembelian, produksi, laporan | Belum dimulai |
+| 2 | Supplier, metode bayar, kategori biaya, harga jual + persetujuan | Selesai |
+| 3 | Resep berversi dan HPP | Berikutnya |
+| 4–9 | Stok, POS (+ delegasi persetujuan), kas, pembelian, produksi, laporan | Belum dimulai |
