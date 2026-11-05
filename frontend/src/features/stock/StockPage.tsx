@@ -19,7 +19,7 @@ import { STOCK_KEY, useSelectedLocation } from './queries'
 export function StockPage() {
   const { locations, list, selected, select, canSeeCost } = useSelectedLocation()
   const [search, setSearch] = useState('')
-  const [only, setOnly] = useState('')
+  const [only, setOnly] = useState('relevant')
 
   const balances = useQuery({
     queryKey: [...STOCK_KEY, 'balances', selected?.id, only],
@@ -67,10 +67,11 @@ export function StockPage() {
         <div className="flex flex-wrap gap-2">
           <Input aria-label="Cari barang" placeholder="Cari nama atau kode…" className="w-56" value={search} onChange={(e) => setSearch(e.target.value)} />
           <Select aria-label="Tampilkan" className="w-48" value={only} onChange={(e) => setOnly(e.target.value)}>
-            <option value="">Semua barang</option>
+            <option value="relevant">Barang di lokasi ini</option>
             <option value="with_stock">Yang ada stoknya</option>
             <option value="low">Stok rendah atau minus</option>
             <option value="negative">Stok minus saja</option>
+            <option value="">Semua barang stok</option>
           </Select>
         </div>
       </div>

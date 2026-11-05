@@ -358,6 +358,8 @@ class InventoryTest extends TestCase
         $this->getJson('/api/v1/stock/locations')->assertJsonCount(1, 'data')->assertJsonPath('data.0.can.operate', true)->assertJsonPath('can_see_cost', false);
         $this->getJson("/api/v1/stock/balances?location_id={$this->otl1->id}&only=low")
             ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.is_low', true)->assertJsonPath('data.0.avg_cost', null)->assertJsonPath('summary.total_value', null);
+        $this->getJson("/api/v1/stock/balances?location_id={$this->otl1->id}&only=relevant")->assertJsonCount(1, 'data');
+        $this->getJson("/api/v1/stock/balances?location_id={$this->otl1->id}")->assertJsonCount(3, 'data');
         $this->getJson("/api/v1/stock/balances?location_id={$this->otl2->id}")->assertForbidden();
         $this->getJson("/api/v1/stock/movements?location_id={$this->otl1->id}&item_id={$this->i['PK-BOWL']->id}")
             ->assertOk()->assertJsonPath('data.0.type', 'OPENING')->assertJsonPath('data.0.value', null);

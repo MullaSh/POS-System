@@ -53,7 +53,7 @@ class StockController
             'location_id' => ['required', 'integer', 'exists:locations,id'],
             'search' => ['nullable', 'string', 'max:100'],
             'type' => ['nullable', Rule::in([Item::TYPE_RAW, Item::TYPE_SEMI_FINISHED, Item::TYPE_SUPPORTING, Item::TYPE_PACKAGING])],
-            'only' => ['nullable', Rule::in(['low', 'negative', 'with_stock'])],
+            'only' => ['nullable', Rule::in(['low', 'negative', 'with_stock', 'relevant'])],
         ]);
         /** @var User $user */
         $user = $request->user();
@@ -99,6 +99,8 @@ class StockController
                 'low' => $low || $negative,
                 'negative' => $negative,
                 'with_stock' => ! Decimal::isZero($qty),
+                // Barang yang pernah bergerak, punya saldo, atau punya stok minimum di lokasi ini.
+                'relevant' => $row['has_movements'] || $min !== null || ! Decimal::isZero($qty),
                 default => true,
             };
             if ($keep) {

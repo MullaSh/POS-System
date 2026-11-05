@@ -35,9 +35,9 @@ export function MovementsTable({ rows, canSeeCost, showItem = false }: { rows: S
                 {m.batch && <p className="text-xs text-muted-foreground">Batch {m.batch.batch_no}{m.batch.expiry_date ? ` · exp ${formatDate(m.batch.expiry_date)}` : ''}</p>}
                 {m.note && <p className="text-xs text-muted-foreground">{m.note}</p>}
               </Td>
-              <Td className="font-mono text-xs">{path ? <Link to={path} className="hover:underline">{m.source.number}</Link> : m.source.number}</Td>
-              <Td className={`text-right font-medium ${Number(m.qty) < 0 ? 'text-destructive' : 'text-success'}`}>{formatSignedQty(m.qty)} {unit}</Td>
-              <Td className="text-right">{formatQty(m.balance_after)} {unit}</Td>
+              <Td className="whitespace-nowrap font-mono text-xs">{path ? <Link to={path} className="hover:underline">{m.source.number}</Link> : m.source.number}</Td>
+              <Td className={`whitespace-nowrap text-right font-medium ${Number(m.qty) < 0 ? 'text-destructive' : 'text-success'}`}>{formatSignedQty(m.qty)} {unit}</Td>
+              <Td className="whitespace-nowrap text-right">{formatQty(m.balance_after)} {unit}</Td>
               {canSeeCost && <Td className="text-right">{m.unit_cost === null ? '–' : formatCost(m.unit_cost)}</Td>}
               {canSeeCost && <Td className="text-right">{m.value === null ? '–' : formatRupiah(Math.round(Number(m.value)))}</Td>}
               <Td className="text-muted-foreground">{m.user?.name ?? 'Sistem'}</Td>

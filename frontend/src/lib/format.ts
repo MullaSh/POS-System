@@ -27,7 +27,7 @@ const rupiah = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 })
 /** Rupiah tanpa desimal, mis. 25000 → "Rp25.000" (dokumen 12 §2.3). */
 export function formatRupiah(value: number | null | undefined): string {
   if (value === null || value === undefined) return '–'
-  return `Rp${rupiah.format(value)}`
+  return value < 0 ? `-Rp${rupiah.format(-value)}` : `Rp${rupiah.format(value)}`
 }
 
 const dateOnly = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Jakarta' })

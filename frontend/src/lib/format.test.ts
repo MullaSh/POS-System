@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { toUnitPayload } from '@/features/catalog/unitRows'
-import { auditActionLabel, formatDateTime, formatQty } from './format'
+import { auditActionLabel, formatDateTime, formatQty, formatRupiah } from './format'
 
 describe('format', () => {
   it('menampilkan jumlah tanpa nol berlebih dengan pemisah Indonesia', () => {
     expect(formatQty('1000.0000')).toBe('1.000')
     expect(formatQty('0.5000')).toBe('0,5')
+  })
+
+  it('menampilkan rupiah minus dengan tanda di depan', () => {
+    expect(formatRupiah(-25000)).toBe('-Rp25.000')
+    expect(formatRupiah(15000)).toBe('Rp15.000')
   })
 
   it('menampilkan waktu dalam WIB dengan format DD/MM/YYYY', () => {
