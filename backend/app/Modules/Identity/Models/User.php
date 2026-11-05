@@ -67,4 +67,32 @@ class User extends Authenticatable
     {
         return $this->hasActiveRole(Role::OWNER);
     }
+
+    /**
+     * Lokasi tempat user boleh bertindak dengan peran itu (2D-P1):
+     * null = semua lokasi, [] = tidak memegang peran itu.
+     *
+     * @return list<int>|null
+     */
+    public function locationIdsFor(string $roleCode): ?array
+    {
+        $assignments = $this->roleAssignments()
+            ->where('status', RoleAssignment::STATUS_ACTIVE)
+            ->whereHas('role', fn ($q) => $q->where('code', $roleCode))
+            ->with('locations:id')
+            ->get();
+
+        if ($assignments->contains(fn (RoleAssignment $a) => $a->scope === RoleAssignment::SCOPE_ALL)) {
+            return null;
+        }
+
+        return $assignments->flatMap(fn (RoleAssignment $a) => $a->locations->pluck('id'))->unique()->values()->all();
+    }
+
+    public function hasRoleAt(string $roleCode, int $locationId): bool
+    {
+        $ids = $this->locationIdsFor($roleCode);
+
+        return $ids === null ? $this->hasActiveRole($roleCode) : in_array($locationId, $ids, true);
+    }
 }

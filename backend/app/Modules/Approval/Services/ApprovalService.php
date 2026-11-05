@@ -8,6 +8,7 @@ use App\Modules\Approval\Models\ApprovalRequest;
 use App\Modules\Audit\Services\AuditLogger;
 use App\Modules\Catalog\Approvals\ItemPriceApproval;
 use App\Modules\Identity\Models\Role;
+use App\Modules\Inventory\Approvals\StockCountApproval;
 use App\Modules\Identity\Models\User;
 use App\Support\DocumentNumber;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -29,6 +30,7 @@ class ApprovalService
     /** @var array<string, class-string<ApprovalHandler>> */
     private const HANDLERS = [
         ApprovalRequest::TYPE_ITEM_PRICE => ItemPriceApproval::class,
+        ApprovalRequest::TYPE_STOCK_COUNT => StockCountApproval::class,
     ];
 
     public function __construct(private readonly AuditLogger $audit) {}

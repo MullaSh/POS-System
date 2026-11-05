@@ -35,6 +35,7 @@ class ApprovalRequest extends Model
     public const OPEN_STATUSES = [self::STATUS_PENDING, self::STATUS_RETURNED];
 
     public const TYPE_ITEM_PRICE = 'ITEM_PRICE';
+    public const TYPE_STOCK_COUNT = 'STOCK_COUNT';
 
     protected $fillable = [
         'number', 'type', 'status', 'subject_type', 'subject_id', 'payload', 'reason',

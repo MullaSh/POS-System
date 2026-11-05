@@ -6,7 +6,13 @@ use App\Modules\Approval\Models\ApprovalRequest;
 use App\Modules\Approval\Services\ApprovalService;
 use App\Modules\Catalog\Models\ExpenseCategory;
 use App\Modules\Catalog\Models\Item;
+use App\Modules\Catalog\Models\ItemMinStock;
 use App\Modules\Catalog\Models\Supplier;
+use App\Modules\Inventory\Models\StockMovement;
+use App\Modules\Inventory\Models\StockTransfer;
+use App\Modules\Inventory\Services\StockEntryService;
+use App\Modules\Inventory\Services\StockRequestService;
+use App\Modules\Inventory\Services\StockTransferService;
 use App\Modules\Catalog\Services\PriceService;
 use App\Modules\Recipe\Models\Recipe;
 use App\Modules\Recipe\Services\RecipeService;
@@ -36,6 +42,9 @@ class DemoDataSeeder extends Seeder
         }
         if (! Recipe::query()->exists()) {
             $this->seedRecipes();
+        }
+        if (! StockMovement::query()->exists()) {
+            $this->seedStock();
         }
     }
 
@@ -167,6 +176,65 @@ class DemoDataSeeder extends Seeder
                 'notes' => 'Resep contoh',
                 'lines' => [$line('SJ-LUMPIA', 'pcs', 4), $line('PK-BOWL', 'pcs', 1)],
             ], $owner);
+        });
+    }
+
+    /**
+     * Irisan 4: saldo awal contoh (jumlah dan harga pokok contoh), satu permintaan stok dari
+     * Outlet 1 untuk diproses gudang, dan satu kiriman ke Outlet 2 untuk diterima kasir2.
+     */
+    private function seedStock(): void
+    {
+        $item = fn (string $code) => Item::query()->where('code', $code)->first();
+        $unit = fn (string $code) => Unit::query()->where('code', $code)->value('id');
+        foreach (['BB-AYAM', 'BB-TEPUNG', 'SJ-DIMSUM', 'SJ-LUMPIA', 'BP-MENTAI', 'PK-BOWL'] as $code) {
+            if (! $item($code)) {
+                return;
+            }
+        }
+        $owner = User::query()->where('username', 'owner')->firstOrFail();
+        $gudang = User::query()->where('username', 'gudang1')->first();
+        $kasir1 = User::query()->where('username', 'kasir1')->first();
+        $warehouse = Location::query()->where('type', Location::TYPE_WAREHOUSE)->firstOrFail();
+        $outlet1 = Location::query()->where('code', 'OTL01')->first();
+        $outlet2 = Location::query()->where('code', 'OTL02')->first();
+        if (! $gudang || ! $kasir1 || ! $outlet1 || ! $outlet2) {
+            return;
+        }
+        $line = fn (string $code, string $u, $qty, $cost = null, array $extra = []) => [
+            'item_id' => $item($code)->id, 'unit_id' => $unit($u), 'qty' => $qty, ...($cost === null ? [] : ['unit_cost' => $cost]), ...$extra,
+        ];
+        $expiry = now()->addMonths(3)->toDateString();
+        $entries = app(StockEntryService::class);
+
+        DB::transaction(function () use ($entries, $owner, $gudang, $kasir1, $warehouse, $outlet1, $outlet2, $line, $expiry, $item) {
+            $entries->opening(['location_id' => $warehouse->id, 'notes' => 'Saldo awal contoh', 'lines' => [
+                $line('BB-AYAM', 'kg', 10, 60000, ['expiry_date' => $expiry]),
+                $line('BB-TEPUNG', 'kg', 20, 12000),
+                $line('SJ-DIMSUM', 'pcs', 200, 1500, ['expiry_date' => $expiry]),
+                $line('SJ-LUMPIA', 'pcs', 100, 2000, ['expiry_date' => $expiry]),
+                $line('BP-MENTAI', 'botol', 6, 45000),
+                $line('PK-BOWL', 'pak', 10, 25000),
+            ]], $owner);
+            $entries->opening(['location_id' => $outlet1->id, 'notes' => 'Saldo awal contoh', 'lines' => [
+                $line('SJ-DIMSUM', 'pcs', 40, 1500),
+                $line('BP-MENTAI', 'ml', 1000, 90),
+                $line('PK-BOWL', 'pcs', 30, 500),
+            ]], $owner);
+
+            if (! ItemMinStock::query()->where(['item_id' => $item('PK-BOWL')->id, 'location_id' => $outlet1->id])->exists()) {
+                ItemMinStock::query()->create(['item_id' => $item('PK-BOWL')->id, 'location_id' => $outlet1->id, 'min_qty' => 50]);
+            }
+
+            app(StockRequestService::class)->create(['location_id' => $outlet1->id, 'notes' => 'Contoh permintaan untuk besok', 'lines' => [
+                $line('SJ-DIMSUM', 'pcs', 80),
+                $line('PK-BOWL', 'pak', 1),
+            ]], $kasir1);
+
+            app(StockTransferService::class)->send(['kind' => StockTransfer::KIND_DISTRIBUTION, 'to_location_id' => $outlet2->id, 'notes' => 'Contoh kiriman', 'lines' => [
+                $line('SJ-LUMPIA', 'pcs', 40),
+                $line('PK-BOWL', 'pcs', 50),
+            ]], $gudang);
         });
     }
 }
