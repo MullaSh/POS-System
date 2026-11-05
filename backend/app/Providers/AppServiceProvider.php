@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Modules\Recipe\Contracts\CostSource;
+use App\Modules\Recipe\Services\NoCostYet;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -11,7 +13,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // Harga pokok dari saldo stok menyusul di irisan 4 (modul Inventory).
+        $this->app->bind(CostSource::class, NoCostYet::class);
     }
 
     public function boot(): void

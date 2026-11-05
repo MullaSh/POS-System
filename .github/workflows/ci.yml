@@ -103,6 +103,7 @@ jobs:
           get items | grep -q '"current_price":25000'
           get payment-methods | grep -q '"code":"CASH"'
           get approvals/summary | grep -q '"waiting_my_decision":1'
+          get recipes | grep -q 'MN-DIMSUM4'
           echo "Login dan data contoh berfungsi"
       - if: always()
         run: docker compose down -v

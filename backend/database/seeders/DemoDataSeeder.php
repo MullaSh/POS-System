@@ -8,6 +8,8 @@ use App\Modules\Catalog\Models\ExpenseCategory;
 use App\Modules\Catalog\Models\Item;
 use App\Modules\Catalog\Models\Supplier;
 use App\Modules\Catalog\Services\PriceService;
+use App\Modules\Recipe\Models\Recipe;
+use App\Modules\Recipe\Services\RecipeService;
 use App\Modules\Catalog\Models\Unit;
 use App\Modules\Identity\Models\Role;
 use App\Modules\Identity\Models\RoleAssignment;
@@ -31,6 +33,9 @@ class DemoDataSeeder extends Seeder
         }
         if (! Supplier::query()->exists()) {
             $this->seedMasterData();
+        }
+        if (! Recipe::query()->exists()) {
+            $this->seedRecipes();
         }
     }
 
@@ -131,6 +136,37 @@ class DemoDataSeeder extends Seeder
             app(ApprovalService::class)->submit(
                 ApprovalRequest::TYPE_ITEM_PRICE, $lumpia, ['price' => 22000], 'Contoh pengajuan harga dari Finance', $finance, Role::FINANCE,
             );
+        });
+    }
+
+    /** Irisan 3: contoh resep produksi dan resep menu. Takarannya contoh, bukan resep usaha. */
+    private function seedRecipes(): void
+    {
+        $item = fn (string $code) => Item::query()->where('code', $code)->first();
+        $unit = fn (string $code) => Unit::query()->where('code', $code)->value('id');
+        $line = fn (string $code, string $u, $qty) => ['item_id' => $item($code)?->id, 'unit_id' => $unit($u), 'qty' => $qty];
+        $owner = User::query()->where('username', 'owner')->firstOrFail();
+        $service = app(RecipeService::class);
+
+        foreach (['SJ-DIMSUM', 'MN-DIMSUM4', 'MN-LUMPIA4', 'BB-AYAM', 'BB-TEPUNG', 'BP-MENTAI', 'PK-BOWL', 'SJ-LUMPIA'] as $code) {
+            if (! $item($code)) {
+                return; // Data contoh barang sudah diubah; lewati resep contoh.
+            }
+        }
+
+        DB::transaction(function () use ($service, $owner, $item, $unit, $line) {
+            $service->create($item('SJ-DIMSUM'), [
+                'output_unit_id' => $unit('pak'), 'output_qty' => 5, 'notes' => 'Resep contoh',
+                'lines' => [$line('BB-AYAM', 'kg', 1.5), $line('BB-TEPUNG', 'kg', 1)],
+            ], $owner);
+            $service->create($item('MN-DIMSUM4'), [
+                'notes' => 'Resep contoh',
+                'lines' => [$line('SJ-DIMSUM', 'pcs', 4), $line('BP-MENTAI', 'ml', 30), $line('PK-BOWL', 'pcs', 1)],
+            ], $owner);
+            $service->create($item('MN-LUMPIA4'), [
+                'notes' => 'Resep contoh',
+                'lines' => [$line('SJ-LUMPIA', 'pcs', 4), $line('PK-BOWL', 'pcs', 1)],
+            ], $owner);
         });
     }
 }
