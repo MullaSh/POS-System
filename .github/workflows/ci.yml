@@ -89,5 +89,16 @@ jobs:
           exit 1
       - name: Periksa halaman login
         run: curl -fsS http://localhost:8080/login | grep -q '<div id="root">'
+      - name: Coba masuk dengan akun contoh dan baca data barang
+        run: |
+          jar=$(mktemp)
+          base=http://localhost:8080
+          curl -fsS -c "$jar" -b "$jar" -H "Referer: $base/" "$base/sanctum/csrf-cookie" -o /dev/null
+          token=$(awk '$6=="XSRF-TOKEN"{print $7}' "$jar" | python3 -c "import sys,urllib.parse;print(urllib.parse.unquote(sys.stdin.read().strip()))")
+          curl -fsS -c "$jar" -b "$jar" -H "Accept: application/json" -H "Content-Type: application/json" \
+            -H "X-XSRF-TOKEN: $token" -H "Referer: $base/" \
+            -d '{"username":"owner","password":"demo12345"}' "$base/api/v1/auth/login" | tee /dev/stderr | grep -q '"username":"owner"'
+          curl -fsS -b "$jar" -H "Accept: application/json" -H "Referer: $base/" "$base/api/v1/items" | grep -q 'BB-AYAM'
+          echo "Login dan data contoh berfungsi"
       - if: always()
         run: docker compose down -v
