@@ -1,0 +1,39 @@
+# Menjalankan aplikasi lengkap di laptop: docker compose up --build
+# Lalu buka http://localhost:8080
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: pos
+      POSTGRES_PASSWORD: pos
+      POSTGRES_DB: pos
+    volumes:
+      - pos-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pos -d pos"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    environment:
+      APP_URL: http://localhost:8080
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: pos
+      DB_USERNAME: pos
+      DB_PASSWORD: pos
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  pos-db:

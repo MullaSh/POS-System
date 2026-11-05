@@ -1,0 +1,86 @@
+name: Tes otomatis
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  backend:
+    name: Backend (Laravel)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: pos
+          POSTGRES_PASSWORD: pos
+          POSTGRES_DB: pos_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pos" --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_pgsql, intl, zip, bcmath
+          coverage: none
+      - name: Pasang paket PHP
+        run: |
+          if [ -f composer.lock ]; then composer install --no-interaction --prefer-dist
+          else composer update --no-interaction --prefer-dist; fi
+      - name: Siapkan konfigurasi
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+      - name: Jalankan tes
+        run: php artisan test
+      - name: Simpan composer.lock
+        uses: actions/upload-artifact@v4
+        with:
+          name: composer-lock
+          path: backend/composer.lock
+
+  frontend:
+    name: Frontend (React)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm test
+
+  docker:
+    name: Docker (uji jalan lengkap)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bangun dan jalankan
+        run: docker compose up --build -d
+      - name: Periksa aplikasi dari browser
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8080/api/v1/health; then echo; exit 0; fi
+            sleep 3
+          done
+          docker compose logs
+          exit 1
+      - name: Periksa halaman login
+        run: curl -fsS http://localhost:8080/login | grep -q '<div id="root">'
+      - if: always()
+        run: docker compose down -v

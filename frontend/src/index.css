@@ -1,0 +1,42 @@
+@import 'tailwindcss';
+
+/* Token warna dasar (gaya shadcn/ui). Layar mengikuti mode terang/gelap sistem. */
+@theme {
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-border: #e2e8f0;
+  --color-input: #cbd5e1;
+  --color-primary: #0f172a;
+  --color-primary-foreground: #f8fafc;
+  --color-destructive: #b91c1c;
+  --color-destructive-foreground: #fef2f2;
+  --color-success: #15803d;
+  --color-ring: #64748b;
+  --radius-lg: 0.625rem;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #0b1120;
+    --color-foreground: #e2e8f0;
+    --color-muted: #1e293b;
+    --color-muted-foreground: #94a3b8;
+    --color-border: #1e293b;
+    --color-input: #334155;
+    --color-primary: #e2e8f0;
+    --color-primary-foreground: #0f172a;
+    --color-destructive: #f87171;
+    --color-destructive-foreground: #450a0a;
+    --color-success: #4ade80;
+  }
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
