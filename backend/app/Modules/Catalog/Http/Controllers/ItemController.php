@@ -3,19 +3,26 @@
 namespace App\Modules\Catalog\Http\Controllers;
 
 use App\Modules\Catalog\Models\Item;
+use App\Modules\Catalog\Models\ItemPrice;
 use App\Modules\Catalog\Services\ItemService;
+use App\Modules\Catalog\Services\PriceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class ItemController
 {
-    public function __construct(private readonly ItemService $items) {}
+    public function __construct(
+        private readonly ItemService $items,
+        private readonly PriceService $prices,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
         $query = Item::query()
             ->with('baseUnit:id,code,name')
+            ->select('items.*')
+            ->selectSub(ItemPrice::currentPriceSubquery(), 'current_price')
             ->when($request->query('type'), fn ($q, $t) => $q->where('item_type', $t))
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($w) => $w
                 ->where('name', 'ilike', "%{$s}%")->orWhere('code', 'ilike', "%{$s}%")))
@@ -124,12 +131,41 @@ class ItemController
                 'is_purchase_default' => $u->is_purchase_default,
                 'is_usage_default' => $u->is_usage_default,
             ])->sortBy(fn ($u) => (float) $u['factor_to_base'])->values(),
+            'price' => $item->isMenu() ? $this->presentPrice($item) : null,
             'min_stocks' => $item->minStocks->map(fn ($m) => [
                 'location_id' => $m->location_id,
                 'location_code' => $m->location->code,
                 'location_name' => $m->location->name,
                 'min_qty' => $m->min_qty,
             ])->values(),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function presentPrice(Item $item): array
+    {
+        $row = fn (ItemPrice $p) => [
+            'id' => $p->id,
+            'price' => $p->price,
+            'effective_from' => $p->effective_from,
+            'set_by' => $p->setter?->only(['id', 'name']),
+            'approval_number' => $p->approvalRequest?->number,
+            'reason' => $p->reason,
+            'created_at' => $p->created_at,
+        ];
+        $open = $this->prices->openRequest($item);
+
+        return [
+            'current' => ($c = $this->prices->current($item)) ? $row($c) : null,
+            'upcoming' => $this->prices->upcoming($item)->map($row)->values(),
+            'history' => $item->prices()->with(['setter:id,name', 'approvalRequest:id,number'])->orderByDesc('id')->limit(50)->get()->map($row)->values(),
+            'open_request' => $open ? [
+                'id' => $open->id,
+                'number' => $open->number,
+                'status' => $open->status,
+                'payload' => $open->payload,
+                'requester' => $open->requester?->only(['id', 'name']),
+            ] : null,
         ];
     }
 }

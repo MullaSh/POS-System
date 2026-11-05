@@ -97,6 +97,9 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            // Sesi database memakai zona waktu aplikasi, agar waktu yang ditulis Laravel
+            // dan waktu bawaan database (now()) sama-sama WIB (dokumen 12 P7).
+            'timezone' => env('APP_TIMEZONE', 'Asia/Jakarta'),
         ],
 
         'sqlsrv' => [

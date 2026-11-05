@@ -55,4 +55,14 @@ class Item extends Model
     {
         return $this->hasMany(ItemMinStock::class);
     }
+
+    public function prices(): HasMany
+    {
+        return $this->hasMany(ItemPrice::class);
+    }
+
+    public function isMenu(): bool
+    {
+        return $this->item_type === self::TYPE_MENU;
+    }
 }
