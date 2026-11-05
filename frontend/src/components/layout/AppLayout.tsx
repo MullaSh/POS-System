@@ -21,7 +21,7 @@ export function AppLayout() {
   return (
     <div className="flex min-h-svh">
       <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-muted/50">
-        <div className="px-5 py-4 text-lg font-semibold">POS UMKM</div>
+        <div className="px-5 py-4 text-lg font-semibold">POS</div>
         <nav aria-label="Menu utama" className="flex-1 space-y-5 px-3">
           {groups.map((g) => (
             <div key={g.title}>

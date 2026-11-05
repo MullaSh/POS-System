@@ -29,7 +29,7 @@ export function UnitsPage() {
       <Card className="mb-4">
         <CardContent className="pt-6">
           <form
-            className="grid gap-4 md:grid-cols-[160px_1fr_auto] md:items-end"
+            className="grid gap-4 md:grid-cols-[160px_1fr_auto] md:items-start"
             onSubmit={(e) => {
               e.preventDefault()
               create.mutate()
@@ -41,7 +41,10 @@ export function UnitsPage() {
             <Field id="unit-name" label="Nama" error={err?.field('name')}>
               <Input id="unit-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </Field>
-            <Button type="submit" disabled={create.isPending}>Tambah satuan</Button>
+            {/* Jarak atas = tinggi label, agar tombol sejajar dengan kotak isian. */}
+            <div className="md:pt-[24px]">
+              <Button type="submit" disabled={create.isPending}>Tambah satuan</Button>
+            </div>
           </form>
         </CardContent>
       </Card>

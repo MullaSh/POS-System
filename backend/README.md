@@ -1,6 +1,6 @@
 # Backend (Laravel)
 
-API dan aturan bisnis POS UMKM. Rancangan: dokumen 12 di Project Knowledge.
+API dan aturan bisnis POS. Rancangan: dokumen 12 di Project Knowledge.
 
 - Framework: Laravel 13, PHP 8.3+
 - Database: PostgreSQL 16

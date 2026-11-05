@@ -1,6 +1,6 @@
 # Frontend (React + TypeScript)
 
-Layar aplikasi POS UMKM. Rancangan: dokumen 12 di Project Knowledge.
+Layar aplikasi POS. Rancangan: dokumen 12 di Project Knowledge.
 
 - React + TypeScript + Vite
 - Tailwind CSS + komponen gaya shadcn/ui (`src/components/ui`)

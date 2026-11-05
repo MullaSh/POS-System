@@ -1,4 +1,4 @@
-# POS UMKM — Sistem Manajemen Usaha Terintegrasi
+# POS — Sistem Manajemen Usaha Terintegrasi
 
 Aplikasi web untuk usaha makanan dengan satu gudang pusat dan banyak outlet:
 kasir, stok, produksi, pembelian, kas, dan laporan dalam satu sistem.

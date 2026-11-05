@@ -12,7 +12,7 @@ describe('Halaman login', () => {
     mockFetch((url) => (url.endsWith('/auth/me') ? { status: 401, body: { message: 'Unauthenticated.' } } : undefined))
     renderWithProviders(<App />, '/login')
 
-    expect(await screen.findByRole('heading', { name: 'Masuk ke POS UMKM' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Masuk ke POS' })).toBeInTheDocument()
     expect(screen.getByLabelText('Username')).toBeInTheDocument()
     expect(screen.getByLabelText('Kata sandi')).toBeInTheDocument()
     expect(await screen.findByText('Server terhubung')).toBeInTheDocument()

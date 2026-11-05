@@ -79,7 +79,7 @@ function CreateOutlet({ onDone }: { onDone: () => void }) {
     <Card className="mb-4">
       <CardContent className="pt-6">
         <form
-          className="grid gap-4 md:grid-cols-[180px_1fr_auto] md:items-end"
+          className="grid gap-4 md:grid-cols-[180px_1fr_auto] md:items-start"
           onSubmit={(e) => {
             e.preventDefault()
             create.mutate()
@@ -91,7 +91,7 @@ function CreateOutlet({ onDone }: { onDone: () => void }) {
           <Field id="loc-name" label="Nama outlet" error={err?.field('name')}>
             <Input id="loc-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </Field>
-          <div className="flex gap-2 pb-[1px]">
+          <div className="flex gap-2 md:pt-[24px]">
             <Button type="submit" disabled={create.isPending}>Simpan</Button>
             <Button type="button" variant="ghost" onClick={onDone}>Batal</Button>
           </div>

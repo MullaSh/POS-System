@@ -39,6 +39,6 @@ describe('Menu per peran', () => {
     mockFetch((url) => (url.endsWith('/auth/me') ? { status: 401, body: {} } : undefined))
     renderWithProviders(<App />, '/barang')
 
-    expect(await screen.findByRole('heading', { name: 'Masuk ke POS UMKM' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Masuk ke POS' })).toBeInTheDocument()
   })
 })

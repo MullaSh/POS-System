@@ -50,7 +50,7 @@ export function LoginPage() {
       <div className="w-full max-w-sm space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Masuk ke POS UMKM</CardTitle>
+            <CardTitle>Masuk ke POS</CardTitle>
             <CardDescription>Gunakan username dan kata sandi yang diberikan pemilik usaha.</CardDescription>
           </CardHeader>
           <CardContent>
