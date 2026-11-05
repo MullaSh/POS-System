@@ -1,0 +1,5 @@
+{
+    "(and :count more error)": "(dan :count kesalahan lainnya)",
+    "(and :count more errors)": "(dan :count kesalahan lainnya)",
+    "The given data was invalid.": "Data yang diisi belum benar."
+}

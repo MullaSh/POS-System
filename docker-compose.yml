@@ -24,6 +24,8 @@ services:
       DB_DATABASE: pos
       DB_USERNAME: pos
       DB_PASSWORD: pos
+      # Data contoh untuk mencoba (outlet, akun, barang). Matikan di server sungguhan.
+      SEED_DEMO: "true"
     depends_on:
       db:
         condition: service_healthy

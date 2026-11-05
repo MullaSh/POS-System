@@ -1,0 +1,63 @@
+<?php
+
+// Pesan validasi Bahasa Indonesia untuk aturan yang dipakai aplikasi.
+return [
+    'array' => ':Attribute harus berupa daftar.',
+    'boolean' => ':Attribute harus bernilai ya atau tidak.',
+    'confirmed' => 'Konfirmasi :attribute tidak cocok.',
+    'date' => ':Attribute bukan tanggal yang valid.',
+    'different' => ':Attribute harus berbeda dari :other.',
+    'distinct' => ':Attribute memiliki nilai yang sama lebih dari sekali.',
+    'exists' => ':Attribute yang dipilih tidak ditemukan.',
+    'gt' => [
+        'numeric' => ':Attribute harus lebih besar dari :value.',
+    ],
+    'in' => ':Attribute yang dipilih tidak valid.',
+    'integer' => ':Attribute harus berupa bilangan bulat.',
+    'max' => [
+        'array' => ':Attribute maksimal berisi :max butir.',
+        'numeric' => ':Attribute maksimal :max.',
+        'string' => ':Attribute maksimal :max karakter.',
+    ],
+    'min' => [
+        'array' => ':Attribute minimal berisi :min butir.',
+        'numeric' => ':Attribute minimal :min.',
+        'string' => ':Attribute minimal :min karakter.',
+    ],
+    'numeric' => ':Attribute harus berupa angka.',
+    'password' => [
+        'letters' => ':Attribute harus memuat minimal satu huruf.',
+        'mixed' => ':Attribute harus memuat huruf besar dan huruf kecil.',
+        'numbers' => ':Attribute harus memuat minimal satu angka.',
+        'symbols' => ':Attribute harus memuat minimal satu simbol.',
+        'uncompromised' => ':Attribute ini pernah bocor di internet. Pilih yang lain.',
+    ],
+    'present' => ':Attribute wajib dikirim.',
+    'regex' => 'Format :attribute tidak valid.',
+    'required' => ':Attribute wajib diisi.',
+    'string' => ':Attribute harus berupa teks.',
+    'unique' => ':Attribute sudah dipakai.',
+
+    'attributes' => [
+        'username' => 'username',
+        'password' => 'kata sandi',
+        'current_password' => 'kata sandi lama',
+        'name' => 'nama',
+        'code' => 'kode',
+        'reason' => 'alasan',
+        'role' => 'peran',
+        'location_ids' => 'lokasi',
+        'location_ids.*' => 'lokasi',
+        'item_type' => 'jenis barang',
+        'base_unit_id' => 'satuan dasar',
+        'notes' => 'catatan',
+        'units' => 'konversi satuan',
+        'units.*.unit_id' => 'satuan',
+        'units.*.factor_to_base' => 'faktor konversi',
+        'min_stocks' => 'stok minimum',
+        'min_stocks.*.location_id' => 'lokasi',
+        'min_stocks.*.min_qty' => 'jumlah minimum',
+        'date_from' => 'tanggal awal',
+        'date_to' => 'tanggal akhir',
+    ],
+];
