@@ -27,7 +27,22 @@ async function session(username, shots) {
   await page.close()
 }
 
+{
+  const page = await browser.newPage({ viewport: { width: 1400, height: 900 } })
+  await page.goto(`${base}/login`)
+  await page.waitForLoadState('networkidle')
+  await page.screenshot({ path: `${out}/login.png` })
+  console.log('login')
+  await page.close()
+}
+
 await session('owner', [
+  ['beranda', '/'],
+  ['pengguna', '/pengguna'],
+  ['barang', '/barang'],
+  ['barang-ayam', '/barang', 'tbody a:has-text("Daging Ayam")'],
+  ['harga-jual', '/barang', 'tbody a:has-text("Dimsum Mentai")'],
+  ['resep-detail', '/resep', 'tbody a:has-text("Dimsum Mentai")'],
   ['stok-gudang', '/stok'],
   ['kartu-stok', '/stok/kartu', null],
   ['persetujuan', '/persetujuan'],
