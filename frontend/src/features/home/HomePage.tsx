@@ -55,8 +55,9 @@ export function HomePage() {
       </Card>
 
       <InfoBanner>
-        Aplikasi ini sedang dibangun bertahap. Yang sudah tersedia: data barang dan harga jual menu, resep menu dan resep produksi, satuan, supplier,
-        metode bayar, kategori biaya, gudang dan outlet, pengguna dan peran, persetujuan, serta jejak audit. Kasir, stok, produksi, pembelian, kas, dan laporan menyusul di tahap berikutnya.
+        Aplikasi ini sedang dibangun bertahap. Yang sudah tersedia: stok gudang dan outlet (saldo awal, kartu stok, waste, stock opname, permintaan stok,
+        pengiriman dan retur), data barang dan harga jual menu, resep dan HPP, satuan, supplier, metode bayar, kategori biaya, gudang dan outlet, pengguna dan peran,
+        persetujuan, serta jejak audit. Kasir, produksi, pembelian, kas, dan laporan menyusul di tahap berikutnya.
       </InfoBanner>
     </div>
   )

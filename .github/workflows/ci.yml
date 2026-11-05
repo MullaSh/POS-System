@@ -104,6 +104,21 @@ jobs:
           get payment-methods | grep -q '"code":"CASH"'
           get approvals/summary | grep -q '"waiting_my_decision":1'
           get recipes | grep -q 'MN-DIMSUM4'
+          get stock/locations | grep -q '"code":"GDG"'
+          get 'recipes?kind=MENU' | grep -q '"per_output_unit":"9200.0000"'
+          get 'stock-requests?status=OPEN' | grep -q '"status":"SUBMITTED"'
+          get 'stock-transfers?status=OPEN' | grep -q '"status":"IN_TRANSIT"'
           echo "Login dan data contoh berfungsi"
+      - name: Ambil screenshot layar
+        run: |
+          mkdir -p /tmp/shots && cd /tmp/shots
+          npm init -y >/dev/null && npm install --silent playwright@1 && npx playwright install --with-deps chromium >/dev/null
+          cp "$GITHUB_WORKSPACE/.github/scripts/screenshots.mjs" . && node screenshots.mjs /tmp/shots
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: /tmp/shots/*.png
+          if-no-files-found: ignore
       - if: always()
         run: docker compose down -v

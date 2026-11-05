@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { hasRole, useMe } from '@/features/auth/useAuth'
 import { PriceForm, type PriceInput } from '@/features/catalog/PriceForm'
 import { ITEMS_KEY } from '@/features/catalog/queries'
+import { STOCK_KEY } from '@/features/stock/queries'
 import { ApiError, errorText, http } from '@/lib/api'
 import { APPROVAL_ACTION_LABEL, APPROVAL_STATUS_LABEL, formatDateTime } from '@/lib/format'
 import type { Approval, ApprovalStatus, Paginated } from '@/lib/types'
@@ -91,6 +92,7 @@ function ApprovalCard({ approval: a }: { approval: Approval }) {
     setNote('')
     qc.invalidateQueries({ queryKey: APPROVALS_KEY })
     qc.invalidateQueries({ queryKey: ITEMS_KEY })
+    qc.invalidateQueries({ queryKey: STOCK_KEY })
   }
   const act = useMutation({
     mutationFn: ({ action, body }: { action: string; body?: unknown }) => http.post(`/approvals/${a.id}/${action}`, body),
@@ -109,7 +111,9 @@ function ApprovalCard({ approval: a }: { approval: Approval }) {
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
             <p className="font-medium">
-              {a.subject.type === 'item' ? <Link to={`/barang/${a.subject.id}`} className="hover:underline">{a.title}</Link> : a.title}
+              {a.subject.type === 'item' ? <Link to={`/barang/${a.subject.id}`} className="hover:underline">{a.title}</Link>
+                : a.subject.type === 'stock_count' ? <Link to={`/stok/opname/${a.subject.id}`} className="hover:underline">{a.title}</Link>
+                : a.title}
             </p>
             <p className="text-lg">{a.summary}</p>
           </div>
@@ -126,7 +130,7 @@ function ApprovalCard({ approval: a }: { approval: Approval }) {
           </p>
         )}
 
-        {mode === 'none' && (a.can.decide || a.can.resubmit || a.can.cancel) && (
+        {mode === 'none' && (a.can.decide || a.can.resubmit || a.can.cancel || a.type === 'STOCK_COUNT') && (
           <div className="flex flex-wrap gap-2">
             {a.can.decide && (
               <>
@@ -135,7 +139,8 @@ function ApprovalCard({ approval: a }: { approval: Approval }) {
                 <Button size="sm" variant="outline" onClick={() => { act.reset(); setMode('reject') }}>Tolak</Button>
               </>
             )}
-            {a.can.resubmit && <Button size="sm" onClick={() => { act.reset(); setMode('resubmit') }}>Perbaiki & ajukan ulang</Button>}
+            {a.type === 'STOCK_COUNT' && <Button asChild size="sm" variant="outline"><Link to={`/stok/opname/${a.subject.id}`}>Lihat rincian opname</Link></Button>}
+            {a.can.resubmit && a.type === 'ITEM_PRICE' && <Button size="sm" onClick={() => { act.reset(); setMode('resubmit') }}>Perbaiki & ajukan ulang</Button>}
             {a.can.cancel && (
               <Button size="sm" variant="ghost" disabled={act.isPending} onClick={() => act.mutate({ action: 'cancel' })}>
                 Batalkan pengajuan
@@ -166,7 +171,7 @@ function ApprovalCard({ approval: a }: { approval: Approval }) {
           </form>
         )}
 
-        {mode === 'resubmit' && (
+        {mode === 'resubmit' && a.type === 'ITEM_PRICE' && (
           <div className="rounded-lg border border-border p-4">
             <PriceForm
               initial={{ price: a.payload.price, effective_date: a.payload.effective_date, reason: a.reason ?? '' }}

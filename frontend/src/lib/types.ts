@@ -109,12 +109,12 @@ type PersonRef = { id: number; name: string; username: string }
 export type Approval = {
   id: number
   number: string
-  type: 'ITEM_PRICE'
+  type: 'ITEM_PRICE' | 'STOCK_COUNT'
   status: ApprovalStatus
   title: string
   summary: string
   subject: { type: string; id: number }
-  payload: PriceProposal
+  payload: PriceProposal & Record<string, unknown>
   reason: string | null
   requester: PersonRef | null
   requester_role: { code: RoleCode; name: string } | null
@@ -200,4 +200,179 @@ export type RecipeDetail = {
   output_item: ItemRef
   can_see_cost: boolean
   versions: RecipeVersion[]
+}
+
+// ---- Stok (irisan 4) ----
+
+export type StockLocation = LocationRef & {
+  status: LocationStatus
+  can: { operate: boolean; request_stock: boolean; opening: boolean }
+}
+
+export type StockBalanceRow = {
+  item: ItemRef
+  qty: string
+  min_qty: string | null
+  is_negative: boolean
+  is_low: boolean
+  has_movements: boolean
+  last_movement_at: string | null
+  avg_cost: string | null
+  value: string | null
+}
+
+export type StockBalances = {
+  data: StockBalanceRow[]
+  summary: { item_count: number; low_count: number; negative_count: number; total_value: string | null }
+  can_see_cost: boolean
+}
+
+export type MovementType =
+  | 'OPENING' | 'PURCHASE_RECEIPT' | 'PRODUCTION_CONSUME' | 'PRODUCTION_OUTPUT'
+  | 'TRANSFER_OUT' | 'TRANSFER_IN' | 'TRANSFER_CANCEL' | 'TRANSFER_SHORT_RETURN' | 'TRANSFER_OVER_SENT'
+  | 'SALE' | 'SALE_REVERSAL' | 'WASTE' | 'ADJUSTMENT' | 'RETURN'
+
+export type StockMovementRow = {
+  id: number
+  type: MovementType
+  item: ItemRef
+  location: LocationRef
+  batch: { id: number; batch_no: string; expiry_date: string | null } | null
+  qty: string
+  balance_after: string
+  unit_cost: string | null
+  value: string | null
+  avg_cost_after: string | null
+  source: { type: string; id: number; number: string }
+  note: string | null
+  user: { id: number; name: string; username: string } | null
+  business_date: string
+  occurred_at: string
+}
+
+export type StockBatchRow = { id: number; item_id: number; batch_no: string; expiry_date: string | null; qty_remaining: string; source: string }
+
+type Person = { id: number; name: string; username: string }
+
+export type StockEntry = {
+  id: number
+  number: string
+  kind: 'OPENING' | 'WASTE'
+  location: LocationRef
+  reason_code: string | null
+  notes: string | null
+  created_by: Person | null
+  created_at: string
+  line_count: number
+  movements?: StockMovementRow[]
+  can_see_cost?: boolean
+}
+
+export type StockCountSummary = {
+  id: number
+  number: string
+  location: LocationRef
+  status: ApprovalStatus | null
+  approval_id: number | null
+  created_by: Person | null
+  created_at: string
+  applied_at: string | null
+  line_count: number
+  difference_count: number
+}
+
+export type StockCountDetail = StockCountSummary & {
+  counted_at: string | null
+  reason: string | null
+  decider: Person | null
+  decided_at: string | null
+  decision_note: string | null
+  lines: {
+    item: ItemRef
+    unit: Unit
+    unit_id: number
+    counted_entered: string
+    counted_qty: string
+    system_qty: string
+    difference: string
+    value: string | null
+  }[]
+  total_value: string | null
+  value_is_estimate: boolean
+  can_see_cost: boolean
+  can: { resubmit: boolean; cancel: boolean; decide: boolean }
+}
+
+export type StockRequestStatus = 'SUBMITTED' | 'IN_TRANSIT' | 'COMPLETED' | 'REJECTED' | 'CANCELLED'
+
+export type StockRequestSummary = {
+  id: number
+  number: string
+  location: LocationRef
+  status: StockRequestStatus
+  needed_date: string | null
+  notes: string | null
+  requested_by: Person | null
+  created_at: string
+  closed_by: Person | null
+  closed_at: string | null
+  close_note: string | null
+  line_count: number
+  transfer: { id: number; number: string; status: TransferStatus } | null
+  can: { fulfil: boolean; reject: boolean; cancel: boolean }
+}
+
+export type StockRequestDetail = StockRequestSummary & {
+  lines: { item: ItemRef; unit: Unit; factor: string; qty: string; entered_qty: string; warehouse_qty: string | null }[]
+}
+
+export type TransferStatus = 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED'
+export type TransferKind = 'DISTRIBUTION' | 'RETURN'
+export type TransferResolution = 'SHORT_SHIPPED' | 'LOST_IN_TRANSIT' | 'OVER_SENT'
+
+export type StockTransferSummary = {
+  id: number
+  number: string
+  kind: TransferKind
+  status: TransferStatus
+  from_location: LocationRef
+  to_location: LocationRef
+  stock_request: { id: number; number: string } | null
+  reason_code: string | null
+  notes: string | null
+  sent_by: Person | null
+  sent_at: string
+  received_by: Person | null
+  received_at: string | null
+  line_count: number
+  unexplained_count: number
+  can: { receive: boolean; cancel: boolean; resolve: boolean }
+}
+
+export type StockTransferLine = {
+  id: number
+  item: ItemRef
+  unit: Unit
+  factor: string
+  sent_qty: string
+  sent_entered: string
+  received_qty: string | null
+  received_entered: string | null
+  difference: string | null
+  unit_cost: string | null
+  difference_value: string | null
+  needs_resolution: boolean
+  resolution: TransferResolution | null
+  resolution_note: string | null
+  resolved_by: Person | null
+  resolved_at: string | null
+}
+
+export type StockTransferDetail = StockTransferSummary & {
+  receive_note: string | null
+  cancelled_by: Person | null
+  cancelled_at: string | null
+  cancel_note: string | null
+  can_see_cost: boolean
+  lines: StockTransferLine[]
 }

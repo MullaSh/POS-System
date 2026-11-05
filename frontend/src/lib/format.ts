@@ -1,4 +1,4 @@
-import type { ApprovalAction, ApprovalStatus, ItemType, LocationStatus, RoleCode } from './types'
+import type { ApprovalAction, ApprovalStatus, ItemType, LocationStatus, MovementType, RoleCode, StockRequestStatus, TransferResolution, TransferStatus } from './types'
 
 const dateTime = new Intl.DateTimeFormat('id-ID', {
   day: '2-digit',
@@ -137,8 +137,76 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   APPROVAL_CANCELLED: 'Pengajuan dibatalkan',
   RECIPE_CREATED: 'Resep dibuat',
   RECIPE_VERSION_CREATED: 'Versi resep baru',
+  STOCK_OPENING_RECORDED: 'Saldo awal stok',
+  STOCK_WASTE_RECORDED: 'Waste dicatat',
+  STOCK_ADJUSTMENT_APPLIED: 'Penyesuaian opname berlaku',
+  STOCK_REQUEST_CREATED: 'Permintaan stok dibuat',
+  STOCK_REQUEST_CANCELLED: 'Permintaan stok dibatalkan',
+  STOCK_REQUEST_REJECTED: 'Permintaan stok ditolak',
+  STOCK_TRANSFER_SENT: 'Barang dikirim',
+  STOCK_TRANSFER_RECEIVED: 'Barang diterima',
+  STOCK_TRANSFER_CANCELLED: 'Pengiriman dibatalkan',
+  STOCK_TRANSFER_DIFFERENCE_RESOLVED: 'Selisih kiriman dijelaskan',
 }
 
 export function auditActionLabel(action: string): string {
   return AUDIT_ACTION_LABEL[action] ?? action
+}
+
+export const MOVEMENT_TYPE_LABEL: Record<MovementType, string> = {
+  OPENING: 'Saldo awal',
+  PURCHASE_RECEIPT: 'Terima pembelian',
+  PRODUCTION_CONSUME: 'Dipakai produksi',
+  PRODUCTION_OUTPUT: 'Hasil produksi',
+  TRANSFER_OUT: 'Dikirim',
+  TRANSFER_IN: 'Diterima',
+  TRANSFER_CANCEL: 'Kiriman dibatalkan',
+  TRANSFER_SHORT_RETURN: 'Kurang kirim (kembali)',
+  TRANSFER_OVER_SENT: 'Kelebihan kirim',
+  SALE: 'Penjualan',
+  SALE_REVERSAL: 'Pembatalan penjualan',
+  WASTE: 'Waste',
+  ADJUSTMENT: 'Penyesuaian opname',
+  RETURN: 'Retur',
+}
+
+export const WASTE_REASON_LABEL: Record<string, string> = {
+  DAMAGED: 'Rusak',
+  EXPIRED: 'Kedaluwarsa',
+  SPILLED: 'Jatuh / tumpah',
+  QUALITY: 'Tidak lolos mutu',
+  OTHER: 'Lainnya',
+}
+
+export const RETURN_REASON_LABEL: Record<string, string> = {
+  EXCESS: 'Stok berlebih',
+  DAMAGED: 'Rusak',
+  NEAR_EXPIRY: 'Mendekati kedaluwarsa',
+  OTHER: 'Lainnya',
+}
+
+export const STOCK_REQUEST_STATUS_LABEL: Record<StockRequestStatus, string> = {
+  SUBMITTED: 'Menunggu gudang',
+  IN_TRANSIT: 'Dalam pengiriman',
+  COMPLETED: 'Selesai',
+  REJECTED: 'Ditolak gudang',
+  CANCELLED: 'Dibatalkan',
+}
+
+export const TRANSFER_STATUS_LABEL: Record<TransferStatus, string> = {
+  IN_TRANSIT: 'Dalam perjalanan',
+  RECEIVED: 'Sudah diterima',
+  CANCELLED: 'Dibatalkan',
+}
+
+export const RESOLUTION_LABEL: Record<TransferResolution, string> = {
+  SHORT_SHIPPED: 'Kurang kirim — barang kembali ke stok pengirim',
+  LOST_IN_TRANSIT: 'Hilang / rusak di perjalanan — dicatat sebagai susut',
+  OVER_SENT: 'Kelebihan kirim — stok pengirim dikurangi',
+}
+
+/** Jumlah bertanda, mis. "+10" atau "-2,5". */
+export function formatSignedQty(value: string | number): string {
+  const n = Number(value)
+  return `${n > 0 ? '+' : ''}${formatQty(n)}`
 }

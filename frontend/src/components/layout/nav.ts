@@ -1,4 +1,4 @@
-import { BookOpen, Boxes, ClipboardCheck, CreditCard, History, Home, MapPin, Receipt, Ruler, Truck, Users } from 'lucide-react'
+import { BookOpen, Boxes, ClipboardCheck, ClipboardList, CreditCard, History, Home, MapPin, PackageMinus, PackageSearch, Receipt, Ruler, Send, Truck, Users, Warehouse } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { RoleCode } from '@/lib/types'
 
@@ -19,6 +19,16 @@ export const NAV: NavGroup[] = [
     items: [
       { to: '/', label: 'Beranda', icon: Home },
       { to: '/persetujuan', label: 'Persetujuan', icon: ClipboardCheck, roles: ['OWNER', 'FINANCE'], badge: 'approvals' },
+    ],
+  },
+  {
+    title: 'Stok',
+    items: [
+      { to: '/stok', label: 'Stok', icon: Warehouse },
+      { to: '/permintaan-stok', label: 'Permintaan stok', icon: Send },
+      { to: '/pengiriman', label: 'Pengiriman', icon: PackageSearch },
+      { to: '/stok/opname', label: 'Stock opname', icon: ClipboardList },
+      { to: '/stok/catatan', label: 'Waste & saldo awal', icon: PackageMinus },
     ],
   },
   {

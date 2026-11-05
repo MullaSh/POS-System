@@ -13,6 +13,12 @@ import { LocationsPage } from '@/features/locations/LocationsPage'
 import { ExpenseCategoriesPage, PaymentMethodsPage } from '@/features/masters/SimpleMasterPage'
 import { RecipeDetailPage } from '@/features/recipes/RecipeDetailPage'
 import { RecipesPage } from '@/features/recipes/RecipesPage'
+import { CountDetailPage, CountFormPage, CountsPage } from '@/features/stock/CountPages'
+import { EntriesPage, EntryDetailPage, OpeningFormPage, WasteFormPage } from '@/features/stock/EntryPages'
+import { RequestDetailPage, RequestFormPage, RequestsPage } from '@/features/stock/RequestPages'
+import { StockCardPage } from '@/features/stock/StockCardPage'
+import { StockPage } from '@/features/stock/StockPage'
+import { TransferDetailPage, TransferFormPage, TransfersPage } from '@/features/stock/TransferPages'
 import { SuppliersPage } from '@/features/suppliers/SuppliersPage'
 import { UsersPage } from '@/features/users/UsersPage'
 
@@ -27,6 +33,21 @@ export default function App() {
         <Route path="barang/:id" element={<ItemDetailPage />} />
         <Route path="resep" element={<RecipesPage />} />
         <Route path="resep/:id" element={<RecipeDetailPage />} />
+        <Route path="stok" element={<StockPage />} />
+        <Route path="stok/kartu" element={<StockCardPage />} />
+        <Route path="stok/saldo-awal/baru" element={<RequireAuth role={['OWNER', 'FINANCE']}><OpeningFormPage /></RequireAuth>} />
+        <Route path="stok/waste/baru" element={<WasteFormPage />} />
+        <Route path="stok/catatan" element={<EntriesPage />} />
+        <Route path="stok/catatan/:id" element={<EntryDetailPage />} />
+        <Route path="stok/opname" element={<CountsPage />} />
+        <Route path="stok/opname/baru" element={<CountFormPage />} />
+        <Route path="stok/opname/:id" element={<CountDetailPage />} />
+        <Route path="permintaan-stok" element={<RequestsPage />} />
+        <Route path="permintaan-stok/baru" element={<RequestFormPage />} />
+        <Route path="permintaan-stok/:id" element={<RequestDetailPage />} />
+        <Route path="pengiriman" element={<TransfersPage />} />
+        <Route path="pengiriman/baru" element={<TransferFormPage />} />
+        <Route path="pengiriman/:id" element={<TransferDetailPage />} />
         <Route path="persetujuan" element={<RequireAuth role={['OWNER', 'FINANCE']}><ApprovalsPage /></RequireAuth>} />
         <Route path="supplier" element={<RequireAuth role={['OWNER', 'FINANCE']}><SuppliersPage /></RequireAuth>} />
         <Route path="metode-bayar" element={<RequireAuth role="OWNER"><PaymentMethodsPage /></RequireAuth>} />
