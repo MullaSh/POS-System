@@ -1,66 +1,66 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import App from '@/App'
+import { mockFetch, sampleUser } from '@/test/fetchMock'
 import { renderWithProviders } from '@/test/render'
-import { LoginPage } from './LoginPage'
 
-function jsonResponse(status: number, body: unknown) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  })
-}
+afterEach(() => vi.unstubAllGlobals())
 
-describe('LoginPage', () => {
-  const fetchMock = vi.fn()
+describe('Halaman login', () => {
+  it('menampilkan form login berbahasa Indonesia', async () => {
+    mockFetch((url) => (url.endsWith('/auth/me') ? { status: 401, body: { message: 'Unauthenticated.' } } : undefined))
+    renderWithProviders(<App />, '/login')
 
-  beforeEach(() => {
-    fetchMock.mockReset()
-    vi.stubGlobal('fetch', fetchMock)
-  })
-  afterEach(() => vi.unstubAllGlobals())
-
-  it('menampilkan form login berbahasa Indonesia', () => {
-    fetchMock.mockResolvedValue(jsonResponse(200, { status: 'ok', database: 'ok' }))
-    renderWithProviders(<LoginPage />)
-
-    expect(screen.getByRole('heading', { name: 'Masuk ke POS UMKM' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Masuk ke POS UMKM' })).toBeInTheDocument()
     expect(screen.getByLabelText('Username')).toBeInTheDocument()
     expect(screen.getByLabelText('Kata sandi')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Masuk' })).toBeInTheDocument()
+    expect(await screen.findByText('Server terhubung')).toBeInTheDocument()
   })
 
   it('menolak form kosong tanpa memanggil server login', async () => {
-    fetchMock.mockResolvedValue(jsonResponse(200, { status: 'ok', database: 'ok' }))
-    renderWithProviders(<LoginPage />)
+    const fetchFn = mockFetch((url) => (url.endsWith('/auth/me') ? { status: 401, body: {} } : undefined))
+    renderWithProviders(<App />, '/login')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Masuk' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Masuk' }))
 
     expect(await screen.findByText('Username wajib diisi')).toBeInTheDocument()
     expect(screen.getByText('Kata sandi wajib diisi')).toBeInTheDocument()
-    const loginCalls = fetchMock.mock.calls.filter(([url]) => String(url).includes('/auth/login'))
-    expect(loginCalls).toHaveLength(0)
+    expect(fetchFn.mock.calls.filter(([u]) => String(u).includes('/auth/login'))).toHaveLength(0)
   })
 
-  it('menampilkan pesan yang mudah dipahami bila server menolak', async () => {
-    fetchMock.mockImplementation((url: string) => {
-      if (url.includes('/health')) return Promise.resolve(jsonResponse(200, { status: 'ok', database: 'ok' }))
-      if (url.includes('/sanctum/csrf-cookie')) return Promise.resolve(new Response(null, { status: 204 }))
-      return Promise.resolve(jsonResponse(404, { message: 'Not Found' }))
+  it('menampilkan pesan dari server bila username atau kata sandi salah', async () => {
+    mockFetch((url) => {
+      if (url.endsWith('/auth/me')) return { status: 401, body: {} }
+      if (url.endsWith('/auth/login'))
+        return { status: 422, body: { message: 'x', errors: { username: ['Username atau kata sandi salah.'] } } }
     })
-    renderWithProviders(<LoginPage />)
+    renderWithProviders(<App />, '/login')
 
-    await userEvent.type(screen.getByLabelText('Username'), 'kasir1')
-    await userEvent.type(screen.getByLabelText('Kata sandi'), 'rahasia')
+    await userEvent.type(await screen.findByLabelText('Username'), 'kasir1')
+    await userEvent.type(screen.getByLabelText('Kata sandi'), 'salah')
     await userEvent.click(screen.getByRole('button', { name: 'Masuk' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Fitur ini belum tersedia di server.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Username atau kata sandi salah.')
   })
 
-  it('menunjukkan status server terhubung', async () => {
-    fetchMock.mockResolvedValue(jsonResponse(200, { status: 'ok', database: 'ok' }))
-    renderWithProviders(<LoginPage />)
+  it('mengarahkan ke ganti kata sandi bila masih memakai kata sandi sementara', async () => {
+    let loggedIn = false
+    mockFetch((url) => {
+      if (url.endsWith('/auth/me'))
+        return loggedIn ? { status: 200, body: { user: sampleUser({ must_change_password: true }) } } : { status: 401, body: {} }
+      if (url.endsWith('/auth/login')) {
+        loggedIn = true
+        return { status: 200, body: { user: sampleUser({ must_change_password: true }) } }
+      }
+    })
+    renderWithProviders(<App />, '/login')
 
-    expect(await screen.findByText('Server terhubung')).toBeInTheDocument()
+    await userEvent.type(await screen.findByLabelText('Username'), 'owner')
+    await userEvent.type(screen.getByLabelText('Kata sandi'), 'GantiSegera123')
+    await userEvent.click(screen.getByRole('button', { name: 'Masuk' }))
+
+    expect(await screen.findByRole('heading', { name: 'Ganti kata sandi' })).toBeInTheDocument()
+    expect(screen.getByText(/kata sandi sementara/i)).toBeInTheDocument()
   })
 })

@@ -33,6 +33,11 @@ class LocationController
 
     public function store(Request $request): JsonResponse
     {
+        // Kode disimpan seragam; samakan sebelum cek keunikan.
+        if (is_string($request->input('code'))) {
+            $request->merge(['code' => strtoupper(trim($request->input('code')))]);
+        }
+
         $data = $request->validate([
             'code' => ['required', 'string', 'max:20', 'regex:/^[A-Za-z0-9-]+$/', Rule::unique('locations', 'code')],
             'name' => ['required', 'string', 'max:100'],

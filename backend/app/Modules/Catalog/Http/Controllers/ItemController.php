@@ -32,6 +32,11 @@ class ItemController
 
     public function store(Request $request): JsonResponse
     {
+        // Kode disimpan seragam; samakan sebelum cek keunikan.
+        if (is_string($request->input('code'))) {
+            $request->merge(['code' => strtoupper(trim($request->input('code')))]);
+        }
+
         $data = $request->validate([
             'code' => ['required', 'string', 'max:30', 'regex:/^[A-Za-z0-9-]+$/', Rule::unique('items', 'code')],
             'name' => ['required', 'string', 'max:150'],

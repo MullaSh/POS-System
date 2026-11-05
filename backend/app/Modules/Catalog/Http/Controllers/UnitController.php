@@ -21,6 +21,11 @@ class UnitController
 
     public function store(Request $request): JsonResponse
     {
+        // Kode disimpan seragam; samakan sebelum cek keunikan.
+        if (is_string($request->input('code'))) {
+            $request->merge(['code' => strtolower(trim($request->input('code')))]);
+        }
+
         $data = $request->validate([
             'code' => ['required', 'string', 'max:20', 'regex:/^[a-z0-9_-]+$/i', Rule::unique('units', 'code')],
             'name' => ['required', 'string', 'max:50'],

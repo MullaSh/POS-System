@@ -30,6 +30,35 @@ Setiap kali ingin mencoba:
 
 Untuk berhenti: tekan `Ctrl + C` di jendela PowerShell tadi.
 
+### Akun contoh (hanya di Docker laptop)
+
+Semua kata sandi: `demo12345`
+
+| Username | Peran | Lokasi |
+| --- | --- | --- |
+| `owner` | Owner | Semua |
+| `finance1` | Finance | Semua |
+| `gudang1` | Gudang | Gudang Pusat |
+| `kasir1` | Kasir | Outlet 1 |
+| `kasir2` | Kasir | Outlet 2 |
+
+Nama outlet dan barang adalah contoh. Di server sungguhan, data contoh tidak
+dipasang; akun `owner` memakai kata sandi sementara yang wajib diganti saat
+pertama masuk.
+
+### Mulai dari data bersih
+
+Bila tampilan atau data terasa tidak sesuai setelah pembaruan, hapus data
+percobaan lalu nyalakan lagi:
+
+```
+docker compose down -v
+docker compose up --build
+```
+
+Perintah pertama menghapus **seluruh data percobaan** di laptop (tidak
+menyentuh kode).
+
 ## Isi repository
 
 | Folder | Isi |
@@ -44,5 +73,6 @@ Untuk berhenti: tekan `Ctrl + C` di jendela PowerShell tadi.
 | Irisan | Isi | Status |
 | --- | --- | --- |
 | 0 | Setup proyek, halaman login awal, tes otomatis, Docker | Selesai |
-| 1 | Login, user dan peran, lokasi, data master barang, audit trail | Berikutnya |
-| 2–9 | Data master lanjutan, resep, stok, POS, kas, pembelian, produksi, laporan | Belum dimulai |
+| 1 | Login, user dan peran, lokasi, data master barang, audit trail | Selesai |
+| 2 | Supplier, metode bayar, kategori biaya, harga jual + persetujuan, delegasi | Berikutnya |
+| 3–9 | Resep, stok, POS, kas, pembelian, produksi, laporan | Belum dimulai |

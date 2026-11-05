@@ -34,12 +34,16 @@ class UserController
 
     public function store(Request $request): JsonResponse
     {
+        // Username disimpan huruf kecil; samakan sebelum cek keunikan.
+        if (is_string($request->input('username'))) {
+            $request->merge(['username' => strtolower(trim($request->input('username')))]);
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'username' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-zA-Z0-9._-]+$/', Rule::unique('users', 'username')],
+            'username' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-z0-9._-]+$/', Rule::unique('users', 'username')],
             'password' => ['required', 'string', Password::min(8)],
         ]);
-        $data['username'] = strtolower($data['username']);
 
         $user = DB::transaction(function () use ($data) {
             $user = User::query()->create([
