@@ -42,6 +42,10 @@ Semua kata sandi: `demo12345`
 | `kasir1` | Kasir | Outlet 1 |
 | `kasir2` | Kasir | Outlet 2 |
 
+Data contoh stok: saldo awal di Gudang Pusat dan Outlet 1, satu permintaan
+stok dari Outlet 1 (untuk diproses `gudang1`), dan satu kiriman ke Outlet 2
+(untuk diterima `kasir2`). Jumlah dan harga pokoknya contoh.
+
 Nama outlet dan barang adalah contoh. Di server sungguhan, data contoh tidak
 dipasang; akun `owner` memakai kata sandi sementara yang wajib diganti saat
 pertama masuk.
@@ -65,7 +69,7 @@ menyentuh kode).
 | --- | --- |
 | `backend/` | Laravel 13 (API, aturan bisnis, database PostgreSQL) |
 | `frontend/` | React + TypeScript (layar aplikasi, Bahasa Indonesia) |
-| `.github/workflows/` | Tes otomatis setiap ada perubahan |
+| `.github/workflows/` | Tes otomatis setiap ada perubahan, termasuk screenshot layar |
 | `docker-compose.yml` | Menjalankan aplikasi lengkap di laptop |
 
 ## Status pengerjaan
@@ -76,5 +80,6 @@ menyentuh kode).
 | 1 | Login, user dan peran, lokasi, data master barang, audit trail | Selesai |
 | 2 | Supplier, metode bayar, kategori biaya, harga jual + persetujuan | Selesai |
 | 3 | Resep menu dan resep produksi berversi, HPP dari bahan | Selesai |
-| 4 | Stok: kartu stok, saldo awal, opname, permintaan stok, transfer | Berikutnya |
-| 5–9 | POS (+ delegasi persetujuan), kas, pembelian, produksi, laporan | Belum dimulai |
+| 4 | Stok: saldo awal + harga pokok, kartu stok, batch gudang, waste, stock opname (disetujui Owner), permintaan stok, kirim/terima/retur dengan penjelasan selisih | Selesai |
+| 5 | POS: shift, transaksi, pembayaran, void/refund, delegasi persetujuan | Berikutnya |
+| 6–9 | Kas, pembelian, produksi, laporan | Belum dimulai |
