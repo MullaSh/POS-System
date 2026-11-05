@@ -21,6 +21,9 @@ class ItemController
     {
         $query = Item::query()
             ->with('baseUnit:id,code,name')
+            // Pilihan bahan di layar resep butuh daftar satuan tiap barang.
+            ->when($request->boolean('with_units'), fn ($q) => $q->with('units.unit:id,code,name'))
+            ->when($request->query('types'), fn ($q, $t) => $q->whereIn('item_type', explode(',', (string) $t)))
             ->select('items.*')
             ->selectSub(ItemPrice::currentPriceSubquery(), 'current_price')
             ->when($request->query('type'), fn ($q, $t) => $q->where('item_type', $t))
@@ -29,7 +32,7 @@ class ItemController
             ->when($request->query('active') !== null, fn ($q) => $q->where('is_active', $request->boolean('active')))
             ->orderBy('name');
 
-        return response()->json($query->paginate(50));
+        return response()->json($query->paginate(min(max((int) $request->query('per_page', 50), 1), 500)));
     }
 
     public function show(Item $item): JsonResponse

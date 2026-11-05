@@ -239,6 +239,16 @@ class RecipeTest extends TestCase
         $this->getJson("/api/v1/recipes/usage?item_id={$this->i['BB-AYAM']->id}")->assertJsonCount(0, 'data');
     }
 
+    public function test_ingredient_picker_lists_items_of_several_types_with_units(): void
+    {
+        $this->actingAsOwner();
+        $this->getJson('/api/v1/items?types=RAW,PACKAGING&with_units=1&per_page=500')
+            ->assertOk()
+            ->assertJsonCount(3, 'data')
+            ->assertJsonPath('data.0.code', 'BB-AYAM')
+            ->assertJsonPath('data.0.units.1.unit.code', 'kg');
+    }
+
     public function test_recipe_versions_cannot_be_changed_in_database(): void
     {
         $this->actingAsOwner();

@@ -44,6 +44,12 @@ export function todayWib(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date())
 }
 
+/** Rupiah dengan desimal bila perlu, untuk harga pokok per gram/ml, mis. "Rp1,95". */
+export function formatCost(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return '–'
+  return `Rp${new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 }).format(Number(value))}`
+}
+
 export const APPROVAL_STATUS_LABEL: Record<ApprovalStatus, string> = {
   PENDING: 'Menunggu keputusan',
   RETURNED: 'Dikembalikan untuk diperbaiki',
@@ -129,6 +135,8 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   APPROVAL_REJECTED: 'Pengajuan ditolak',
   APPROVAL_RETURNED: 'Pengajuan dikembalikan',
   APPROVAL_CANCELLED: 'Pengajuan dibatalkan',
+  RECIPE_CREATED: 'Resep dibuat',
+  RECIPE_VERSION_CREATED: 'Versi resep baru',
 }
 
 export function auditActionLabel(action: string): string {

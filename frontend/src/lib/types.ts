@@ -149,3 +149,55 @@ export type Paginated<T> = {
   last_page: number
   total: number
 }
+
+export type ItemRef = { id: number; code: string; name: string; item_type: ItemType; is_active: boolean; base_unit: Unit }
+
+/** Barang untuk pilihan bahan resep, lengkap dengan konversi satuannya. */
+export type ItemWithUnits = ItemSummary & {
+  units: { unit_id: number; factor_to_base: string; unit: Unit }[]
+}
+
+export type RecipeKind = 'MENU' | 'PRODUCTION'
+export type CostSource = 'STOCK_AVERAGE' | 'FROM_RECIPE' | null
+
+export type RecipeSummary = {
+  id: number
+  kind: RecipeKind
+  output_item: ItemRef
+  current: { version_no: number; effective_from: string; line_count: number; output_qty: string } | null
+  upcoming_count: number
+  cost: { total: string | null; per_output_unit: string | null; missing_count: number } | null
+}
+
+export type RecipeLine = {
+  item: ItemRef
+  qty: string
+  entered_qty: string
+  unit: Unit
+  unit_cost: string | null
+  line_cost: string | null
+  cost_source: CostSource
+}
+
+export type RecipeVersion = {
+  id: number
+  version_no: number
+  effective_from: string
+  status: 'CURRENT' | 'UPCOMING' | 'PAST' | 'SUPERSEDED'
+  output_qty: string
+  output_entered_qty: string
+  output_unit: Unit
+  notes: string | null
+  created_by: { id: number; name: string } | null
+  created_at: string
+  lines: RecipeLine[]
+  cost: { total: string | null; per_output_unit: string | null; missing: string[] } | null
+}
+
+export type RecipeDetail = {
+  id: number
+  kind: RecipeKind
+  output_item: ItemRef
+  can_see_cost: boolean
+  versions: RecipeVersion[]
+}

@@ -1,4 +1,4 @@
-import { Boxes, ClipboardCheck, CreditCard, History, Home, MapPin, Receipt, Ruler, Truck, Users } from 'lucide-react'
+import { BookOpen, Boxes, ClipboardCheck, CreditCard, History, Home, MapPin, Receipt, Ruler, Truck, Users } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { RoleCode } from '@/lib/types'
 
@@ -25,6 +25,7 @@ export const NAV: NavGroup[] = [
     title: 'Data master',
     items: [
       { to: '/barang', label: 'Barang & menu', icon: Boxes },
+      { to: '/resep', label: 'Resep', icon: BookOpen },
       { to: '/satuan', label: 'Satuan', icon: Ruler, roles: ['OWNER'] },
       { to: '/supplier', label: 'Supplier', icon: Truck, roles: ['OWNER', 'FINANCE'] },
       { to: '/metode-bayar', label: 'Metode bayar', icon: CreditCard, roles: ['OWNER'] },
