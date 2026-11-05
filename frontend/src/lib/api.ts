@@ -6,11 +6,18 @@
 export class ApiError extends Error {
   readonly status: number
   readonly errors: Record<string, string[]>
+  readonly code?: string
 
-  constructor(status: number, message: string, errors: Record<string, string[]> = {}) {
+  constructor(status: number, message: string, errors: Record<string, string[]> = {}, code?: string) {
     super(message)
     this.status = status
     this.errors = errors
+    this.code = code
+  }
+
+  /** Pesan pertama untuk satu field, bila ada. */
+  field(name: string): string | undefined {
+    return this.errors[name]?.[0]
   }
 }
 
@@ -24,12 +31,12 @@ function readCookie(name: string): string | undefined {
 /** Pesan yang dapat dipahami pengguna untuk setiap jenis kegagalan. */
 export function friendlyMessage(status: number, serverMessage?: string): string {
   if (status === 0) return 'Tidak dapat terhubung ke server. Periksa koneksi internet lalu coba lagi.'
-  if (status === 401) return 'Sesi Anda sudah berakhir. Silakan masuk kembali.'
-  if (status === 403) return 'Anda tidak memiliki izin untuk tindakan ini.'
-  if (status === 404) return 'Fitur ini belum tersedia di server.'
+  if (status === 401) return serverMessage ?? 'Sesi Anda sudah berakhir. Silakan masuk kembali.'
+  if (status === 403) return serverMessage ?? 'Anda tidak memiliki izin untuk tindakan ini.'
+  if (status === 404) return 'Data atau fitur yang dicari tidak ditemukan.'
   if (status === 419) return 'Halaman sudah terlalu lama terbuka. Muat ulang halaman lalu coba lagi.'
   if (status === 422) return serverMessage ?? 'Data yang diisi belum benar.'
-  if (status === 429) return 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.'
+  if (status === 429) return serverMessage ?? 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.'
   if (status >= 500) return 'Terjadi gangguan di server. Coba lagi beberapa saat lagi.'
   return serverMessage ?? 'Terjadi kesalahan.'
 }
@@ -63,11 +70,27 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const body = isJson ? await response.json() : null
 
   if (!response.ok) {
+    if (response.status === 419) csrfReady = false
     throw new ApiError(
       response.status,
       friendlyMessage(response.status, body?.message),
       body?.errors ?? {},
+      body?.code,
     )
   }
   return body as T
+}
+
+export const http = {
+  get: <T>(path: string) => api<T>(path),
+  post: <T>(path: string, data?: unknown) =>
+    api<T>(path, { method: 'POST', body: data === undefined ? undefined : JSON.stringify(data) }),
+  patch: <T>(path: string, data: unknown) => api<T>(path, { method: 'PATCH', body: JSON.stringify(data) }),
+  put: <T>(path: string, data: unknown) => api<T>(path, { method: 'PUT', body: JSON.stringify(data) }),
+}
+
+/** Pesan kesalahan untuk ditampilkan, dari error apa pun. */
+export function errorText(error: unknown): string | null {
+  if (!error) return null
+  return error instanceof ApiError ? error.message : 'Terjadi kesalahan.'
 }
