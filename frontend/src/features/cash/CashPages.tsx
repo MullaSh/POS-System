@@ -316,7 +316,7 @@ export function ExpensesPage() {
   const categories = useQuery({ queryKey: ['expense-categories'], queryFn: () => http.get<{ data: SimpleMaster[] }>('/expense-categories') })
   const list = useQuery({ queryKey: [...CASH_KEY, 'expenses'], queryFn: () => http.get<Paginated<Expense>>('/cash/expenses') })
   const choices = [
-    ...(hasRole(me, 'CASHIER') ? (overview.data?.data.outlets ?? []).map((o) => ({ ...o.location, petty: true })) : []),
+    ...(hasRole(me, 'CASHIER') ? (overview.data?.data.outlets ?? []).map((o) => ({ ...o.location, type: 'OUTLET' as const, petty: true })) : []),
     ...(isFinance ? (allLocations.data?.data ?? []).filter((l) => l.status !== 'CLOSED').map((l) => ({ id: l.id, code: l.code, name: l.name, type: l.type, petty: false })) : []),
   ].filter((c, i, a) => a.findIndex((x) => x.id === c.id) === i)
   const [form, setForm] = useState({ location_id: '', expense_category_id: '', description: '', evidence_note: '' })
@@ -468,7 +468,9 @@ export function PettyCashPage() {
                 {err?.field(`decisions.${e.id}`) && <p className="w-full text-destructive">{err.field(`decisions.${e.id}`)}</p>}
               </div>
             ))}
-            <p className="text-sm">Akan diisi: <span className="text-lg font-semibold">{formatRupiah(verified + gap)}</span>{gap > 0 && <span className="text-muted-foreground"> (termasuk {formatRupiah(gap)} untuk mencapai saldo tetap)</span>}</p>
+            {allDecided ? (
+              <p className="text-sm">Akan diisi: <span className="text-lg font-semibold">{formatRupiah(verified + gap)}</span>{gap > 0 && <span className="text-muted-foreground"> (termasuk {formatRupiah(gap)} untuk mencapai saldo tetap)</span>}</p>
+            ) : <p className="text-sm text-muted-foreground">Jumlah isi ulang tampil setelah semua biaya diperiksa.</p>}
             <Button disabled={act.isPending || !allDecided} onClick={() => act.mutate({ path: `/cash/petty-cash/${id}/refill`, body: { decisions: Object.fromEntries(Object.entries(decisions).map(([k, v]) => [k, { decision: v.decision, note: v.note || null }])) } })}>
               Isi ulang Petty Cash
             </Button>
@@ -496,17 +498,23 @@ export function PettyCashPage() {
 export function ReconciliationPage() {
   const { data: me } = useMe()
   const canAct = hasRole(me, 'FINANCE')
+  const [showEmpty, setShowEmpty] = useState(false)
   const list = useQuery({ queryKey: [...CASH_KEY, 'recon'], queryFn: () => http.get<{ data: ReconciliationRow[] }>('/cash/reconciliations?days=14') })
+  const rows = (list.data?.data ?? []).filter((r) => showEmpty || r.system_amount !== 0 || r.reconciliation)
   return (
     <div className="max-w-5xl space-y-4">
       <PageHeader title="Pencocokan non-tunai" purpose="Cocokkan total QRIS, transfer, dan e-wallet di sistem dengan mutasi rekening usaha, setiap hari." />
       <InfoBanner>Total di sistem = pembayaran non-tunai semua outlet pada tanggal itu dikurangi pengembalian (refund) non-tunai. Isi total mutasi masuk di rekening untuk metode itu; selisih wajib dijelaskan.</InfoBanner>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={showEmpty} onChange={(e) => setShowEmpty(e.target.checked)} />
+        Tampilkan juga hari tanpa transaksi non-tunai (14 hari terakhir)
+      </label>
       {list.isPending ? <Loading /> : list.error ? <ErrorAlert message={errorText(list.error)} /> : (
         <Table>
           <thead><tr><Th>Tanggal</Th><Th>Metode</Th><Th className="text-right">Di sistem</Th><Th>Mutasi rekening</Th><Th className="text-right">Selisih</Th></tr></thead>
           <tbody>
-            {list.data.data.length === 0 && <EmptyRow colSpan={5}>Belum ada metode non-tunai.</EmptyRow>}
-            {list.data.data.map((r) => <ReconRow key={`${r.business_date}-${r.method.id}`} row={r} canAct={canAct} />)}
+            {rows.length === 0 && <EmptyRow colSpan={5}>Tidak ada transaksi non-tunai dalam 14 hari terakhir.</EmptyRow>}
+            {rows.map((r) => <ReconRow key={`${r.business_date}-${r.method.id}`} row={r} canAct={canAct} />)}
           </tbody>
         </Table>
       )}
