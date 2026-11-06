@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureAccountUsable;
 use App\Http\Middleware\EnsureRole;
+use App\Support\ControlBlocked;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -28,4 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+        // Percobaan yang ditolak kontrol wajib dicatat di jejak audit (irisan 9), lalu dijawab 403 seperti biasa.
+        $exceptions->render(function (ControlBlocked $e) {
+            $e->record();
+
+            return null;
+        });
     })->create();

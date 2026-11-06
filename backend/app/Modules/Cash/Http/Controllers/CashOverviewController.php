@@ -3,8 +3,6 @@
 namespace App\Modules\Cash\Http\Controllers;
 
 use App\Modules\Cash\Models\CashHandover;
-use App\Modules\Cash\Models\DiscrepancyResolution;
-use App\Modules\Cash\Models\Expense;
 use App\Modules\Cash\Models\NoncashReconciliation;
 use App\Modules\Cash\Models\PettyCashRefill;
 use App\Modules\Cash\Services\CashAccess;
@@ -17,7 +15,6 @@ use App\Modules\Location\Models\Location;
 use App\Modules\Sales\Models\CashierShift;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 /** Ringkasan tiga dana, pencocokan non-tunai, dan daftar selisih. */
@@ -75,7 +72,7 @@ class CashOverviewController
             'outlets' => $outlets,
             'warehouse' => $warehouse,
             'sees_all' => $this->access->seesAll($user),
-            'open_discrepancies' => $this->access->seesAll($user) ? count(array_filter($this->discrepancies(), fn ($d) => $d['resolution'] === null)) : null,
+            'open_discrepancies' => $this->access->seesAll($user) ? count(array_filter($this->recon->discrepancies(), fn ($d) => $d['resolution'] === null)) : null,
         ]]);
     }
 
@@ -132,7 +129,7 @@ class CashOverviewController
     {
         $request->validate(['status' => ['nullable', Rule::in(['OPEN', 'ALL'])]]);
         $this->ensureSeesAll($request->user());
-        $rows = $this->discrepancies();
+        $rows = $this->recon->discrepancies();
         if ($request->query('status', 'OPEN') === 'OPEN') {
             $rows = array_values(array_filter($rows, fn ($r) => $r['resolution'] === null));
         }
@@ -145,46 +142,12 @@ class CashOverviewController
         $data = $request->validate([
             'subject_type' => ['required', Rule::in(array_keys(ReconciliationService::SUBJECTS))],
             'subject_id' => ['required', 'integer'],
+            'category' => ['required', Rule::in(ReconciliationService::CATEGORIES)],
             'decision' => ['required', 'string', 'max:1000'],
-        ], ['decision.required' => 'Tuliskan keputusan penyelesaian selisih.']);
-        $this->recon->resolve($data['subject_type'], (int) $data['subject_id'], $data['decision'], $request->user());
+        ], ['decision.required' => 'Tuliskan keputusan penyelesaian selisih.', 'category.required' => 'Pilih jenis penyelesaian selisih.']);
+        $this->recon->resolve($data['subject_type'], (int) $data['subject_id'], $data['decision'], $request->user(), $data['category']);
 
         return response()->json(['data' => ['ok' => true]], 201);
-    }
-
-    /** @return list<array<string, mixed>> */
-    private function discrepancies(): array
-    {
-        $resolutions = DiscrepancyResolution::query()->with('decider:id,name')->get()->keyBy(fn ($r) => "{$r->subject_type}|{$r->subject_id}");
-        $res = fn (string $type, int $id) => ($r = $resolutions->get("{$type}|{$id}"))
-            ? ['decision' => $r->decision, 'by' => $r->decider?->name, 'at' => $r->created_at] : null;
-        $rows = [];
-
-        foreach (CashierShift::query()->with(['location', 'cashier:id,name'])->where('status', CashierShift::STATUS_CLOSED)->where('cash_difference', '<>', 0)->orderByDesc('closed_at')->limit(300)->get() as $s) {
-            $rows[] = ['subject_type' => 'cashier_shift', 'subject_id' => $s->id, 'number' => $s->number, 'kind' => 'Tutup shift',
-                'location' => $s->location?->name, 'person' => $s->cashier?->name, 'amount' => (int) $s->cash_difference,
-                'explanation' => $s->close_note, 'at' => $s->closed_at, 'link' => "/shift/{$s->id}", 'resolution' => $res('cashier_shift', $s->id)];
-        }
-        foreach (CashHandover::query()->with(['fromLocation', 'receiver:id,name'])->where('status', CashHandover::STATUS_RECEIVED)->whereColumn('received_amount', '<>', 'expected_amount')->orderByDesc('received_at')->limit(300)->get() as $h) {
-            $rows[] = ['subject_type' => 'cash_handover', 'subject_id' => $h->id, 'number' => $h->number,
-                'kind' => $h->stage === CashHandover::STAGE_OUTLET ? 'Serah terima outlet → gudang' : 'Serah terima gudang → Finance',
-                'location' => $h->fromLocation?->name, 'person' => $h->receiver?->name, 'amount' => (int) $h->difference(),
-                'explanation' => trim(($h->sender_note ? "Pengirim: {$h->sender_note}. " : '').($h->evidence_note ? "Penerima: {$h->evidence_note}" : '')),
-                'at' => $h->received_at, 'link' => "/kas/serah-terima/{$h->id}", 'resolution' => $res('cash_handover', $h->id)];
-        }
-        foreach (Expense::query()->with(['location', 'recorder:id,name'])->where('status', Expense::STATUS_REJECTED)->orderByDesc('decided_at')->limit(300)->get() as $e) {
-            $rows[] = ['subject_type' => 'expense', 'subject_id' => $e->id, 'number' => $e->number, 'kind' => 'Biaya Petty Cash ditolak',
-                'location' => $e->location?->name, 'person' => $e->recorder?->name, 'amount' => -$e->amount,
-                'explanation' => "{$e->description}. Alasan ditolak: {$e->decision_note}", 'at' => $e->decided_at, 'link' => '/kas/biaya', 'resolution' => $res('expense', $e->id)];
-        }
-        foreach (NoncashReconciliation::query()->with('method')->where('difference', '<>', 0)->orderByDesc('business_date')->limit(300)->get() as $n) {
-            $rows[] = ['subject_type' => 'noncash_reconciliation', 'subject_id' => $n->id, 'number' => ($n->method?->name ?? '').' '.$n->business_date->format('d/m/Y'),
-                'kind' => 'Pencocokan non-tunai', 'location' => 'Rekening pusat', 'person' => null, 'amount' => (int) $n->difference,
-                'explanation' => $n->note, 'at' => $n->created_at, 'link' => '/kas/rekonsiliasi', 'resolution' => $res('noncash_reconciliation', $n->id)];
-        }
-        usort($rows, fn ($a, $b) => Carbon::parse($b['at'])->timestamp <=> Carbon::parse($a['at'])->timestamp);
-
-        return $rows;
     }
 
     private function ensureSeesAll(User $user): void

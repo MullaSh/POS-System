@@ -170,7 +170,7 @@ class CashTest extends TestCase
         $this->assertSame([['expense', -20000]], array_map(fn ($r) => [$r['subject_type'], $r['amount']], $open));
         $this->postJson('/api/v1/cash/discrepancies/resolve', ['subject_type' => 'expense', 'subject_id' => $e2, 'decision' => 'x'])->assertForbidden();
         $this->as($this->finance);
-        $this->postJson('/api/v1/cash/discrepancies/resolve', ['subject_type' => 'expense', 'subject_id' => $e2, 'decision' => 'Ditanggung kasir'])->assertCreated();
+        $this->postJson('/api/v1/cash/discrepancies/resolve', ['subject_type' => 'expense', 'subject_id' => $e2, 'decision' => 'Ditanggung kasir', 'category' => 'STAFF'])->assertCreated();
         $this->postJson('/api/v1/cash/discrepancies/resolve', ['subject_type' => 'expense', 'subject_id' => $e2, 'decision' => 'lagi'])->assertUnprocessable();
         $this->postJson('/api/v1/cash/discrepancies/resolve', ['subject_type' => 'expense', 'subject_id' => $e1, 'decision' => 'x'])->assertUnprocessable();
         $this->assertSame([], $this->getJson('/api/v1/cash/discrepancies')->json('data'));

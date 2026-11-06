@@ -14,6 +14,7 @@ use App\Modules\Inventory\Models\StockTransferLine;
 use App\Modules\Location\Models\Location;
 use App\Support\Decimal;
 use App\Support\DocumentNumber;
+use App\Support\ControlBlocked;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -144,7 +145,7 @@ class StockTransferService
             $transfer = $this->lock($transfer);
             $this->ensureInTransit($transfer);
             if ($transfer->sent_by === $user->id) {
-                throw new AuthorizationException('Barang tidak dapat diterima oleh pengirimnya sendiri.');
+                throw new ControlBlocked('Barang tidak dapat diterima oleh pengirimnya sendiri.', ControlBlocked::SAME_SENDER_RECEIVER, $transfer, $to->id);
             }
 
             $byId = collect($lines)->keyBy('line_id');

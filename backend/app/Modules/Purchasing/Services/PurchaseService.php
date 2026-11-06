@@ -21,6 +21,7 @@ use App\Modules\Purchasing\Models\PurchaseRequest;
 use App\Modules\System\Models\AppSetting;
 use App\Support\Decimal;
 use App\Support\DocumentNumber;
+use App\Support\ControlBlocked;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -337,7 +338,7 @@ class PurchaseService
             throw new AuthorizationException('Barang dari supplier diterima oleh staf gudang.');
         }
         if ($po->created_by === $user->id) {
-            throw new AuthorizationException('Pembuat PO tidak boleh menerima barangnya sendiri (AB-15).');
+            throw new ControlBlocked('Pembuat PO tidak boleh menerima barangnya sendiri (AB-15).', ControlBlocked::BUYER_RECEIVES, $po, $po->location_id);
         }
 
         return DB::transaction(function () use ($po, $data, $user) {
