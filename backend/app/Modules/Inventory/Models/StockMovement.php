@@ -34,6 +34,8 @@ class StockMovement extends Model
     public const TRANSFER_OVER_SENT = 'TRANSFER_OVER_SENT';
     public const WASTE = 'WASTE';
     public const ADJUSTMENT = 'ADJUSTMENT';
+    public const SALE = 'SALE';
+    public const SALE_REVERSAL = 'SALE_REVERSAL';
 
     public const UPDATED_AT = null;
 
