@@ -12,6 +12,9 @@ class AppSetting extends Model
 {
     public const PURCHASE_FINANCE_LIMIT = 'purchase.finance_limit';
 
+    /** Toleransi varians produksi dalam persen (keputusan Owner 6 Nov 2026). */
+    public const PRODUCTION_VARIANCE_TOLERANCE = 'production.variance_tolerance_pct';
+
     protected $primaryKey = 'key';
 
     public $incrementing = false;

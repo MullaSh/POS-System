@@ -67,6 +67,7 @@ class ItemController
         $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'shelf_life_days' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:3650'],
         ]);
 
         return response()->json(['data' => $this->present($this->items->update($item, $data))]);
@@ -125,6 +126,7 @@ class ItemController
             'is_stock_item' => $item->isStockItem(),
             'is_active' => $item->is_active,
             'notes' => $item->notes,
+            'shelf_life_days' => $item->shelf_life_days,
             'base_unit' => $item->baseUnit,
             'units' => $item->units->map(fn ($u) => [
                 'unit_id' => $u->unit_id,

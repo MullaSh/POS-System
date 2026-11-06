@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $item_type
  * @property int $base_unit_id
  * @property bool $is_active
+ * @property int|null $shelf_life_days Umur simpan (hari), hanya barang setengah jadi; mengisi kedaluwarsa hasil produksi
  */
 class Item extends Model
 {
@@ -29,11 +30,11 @@ class Item extends Model
         self::TYPE_RAW, self::TYPE_SEMI_FINISHED, self::TYPE_SUPPORTING, self::TYPE_PACKAGING, self::TYPE_MENU,
     ];
 
-    protected $fillable = ['code', 'name', 'item_type', 'base_unit_id', 'is_active', 'notes'];
+    protected $fillable = ['code', 'name', 'item_type', 'base_unit_id', 'is_active', 'notes', 'shelf_life_days'];
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return ['is_active' => 'boolean', 'shelf_life_days' => 'integer'];
     }
 
     public function isStockItem(): bool

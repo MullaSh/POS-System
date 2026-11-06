@@ -29,7 +29,7 @@ use Illuminate\Validation\ValidationException;
  * Pembelian (AB-14 s.d. AB-16; KP-08, KP-10, KP-11; keputusan Owner 6 Nov 2026):
  * - Gudang mengajukan PR berisi barang dan jumlah saja; Finance menyetujui (C10).
  * - Finance memilih supplier dan harga di PO. PO di atas batas Finance (pengaturan Owner, OD-10)
- *   disetujui Owner sebelum dipesan (2E-Q1a, diterapkan pada PO karena nilai baru diketahui di PO).
+ *   disetujui Owner sebelum dipesan (2E-Q1a, diterapkan pada PO karena nilai baru diketahui di PO; P7-01 disetujui Owner 6 Nov 2026).
  * - Gudang menerima barang dengan QC Incoming: diterima baik masuk stok dengan harga PO, ditolak
  *   dikembalikan ke supplier dan tidak ditagih. Satu PO boleh diterima beberapa kali; PO yang belum
  *   lengkap dapat ditutup Finance dengan alasan (KOD-04).

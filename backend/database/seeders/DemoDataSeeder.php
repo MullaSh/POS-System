@@ -23,6 +23,8 @@ use App\Modules\Sales\Models\Sale;
 use App\Modules\Cash\Models\Expense;
 use App\Modules\Purchasing\Models\PurchaseRequest;
 use App\Modules\Purchasing\Services\PurchaseService;
+use App\Modules\Production\Models\ProductionOrder;
+use App\Modules\Production\Services\ProductionService;
 use App\Modules\Cash\Services\PettyCashService;
 use App\Modules\Catalog\Models\ExpenseCategory as DemoExpenseCategory;
 use App\Modules\Sales\Services\RefundService;
@@ -65,6 +67,9 @@ class DemoDataSeeder extends Seeder
         }
         if (! PurchaseRequest::query()->exists()) {
             $this->seedPurchasing();
+        }
+        if (! ProductionOrder::query()->exists()) {
+            $this->seedProduction();
         }
     }
 
@@ -380,6 +385,49 @@ class DemoDataSeeder extends Seeder
 
             $purchases->createRequest(['reason' => 'Contoh: tepung untuk kulit dimsum',
                 'lines' => [['item_id' => $tepung->id, 'unit_id' => $kg, 'qty' => 10]]], $gudang);
+        });
+    }
+
+    /**
+     * Irisan 8: toleransi varians 5%, umur simpan Frozen Dimsum 90 hari, satu produksi yang sudah
+     * selesai (hasil baik 96, gagal 4), dan satu permintaan Outlet 2 yang stok gudangnya kurang
+     * dengan rencana produksi untuknya. Takaran dan hasil adalah contoh.
+     */
+    private function seedProduction(): void
+    {
+        $owner = User::query()->where('username', 'owner')->firstOrFail();
+        $gudang = User::query()->where('username', 'gudang1')->first();
+        $kasir2 = User::query()->where('username', 'kasir2')->first();
+        $outlet2 = Location::query()->where('code', 'OTL02')->first();
+        $dimsum = Item::query()->where('code', 'SJ-DIMSUM')->first();
+        $unit = fn (string $code) => Unit::query()->where('code', $code)->value('id');
+        if (! $gudang || ! $kasir2 || ! $outlet2 || ! $dimsum || ! Recipe::query()->where(['output_item_id' => $dimsum->id, 'kind' => Recipe::KIND_PRODUCTION])->exists()) {
+            return;
+        }
+        $production = app(ProductionService::class);
+
+        DB::transaction(function () use ($production, $owner, $gudang, $kasir2, $outlet2, $dimsum, $unit) {
+            if (! \App\Modules\System\Models\AppSetting::query()->whereKey(\App\Modules\System\Models\AppSetting::PRODUCTION_VARIANCE_TOLERANCE)->exists()) {
+                $production->setTolerance(ProductionService::DEFAULT_TOLERANCE, $owner);
+            }
+            if ($dimsum->shelf_life_days === null) {
+                $dimsum->update(['shelf_life_days' => 90]);
+            }
+
+            $done = $production->plan(['output_item_id' => $dimsum->id, 'unit_id' => $unit('pak'), 'qty' => 5, 'notes' => 'Contoh produksi'], $gudang);
+            $lines = $done->lines()->with('item')->get()->keyBy(fn ($l) => $l->item->code);
+            $production->complete($done, [
+                'unit_id' => $unit('pcs'), 'good_qty' => 96,
+                'failures' => [['reason' => 'MISSHAPEN', 'qty' => 4, 'note' => 'Kulit sobek saat dilipat']],
+                'lines' => $lines->map(fn ($l, $code) => ['line_id' => $l->id, 'actual_qty' => $code === 'BB-AYAM' ? '1.55' : bcdiv((string) $l->standard_qty, (string) $l->factor, 4)])->values()->all(),
+                'note' => 'Contoh hasil produksi',
+            ], $gudang);
+
+            $request = app(StockRequestService::class)->create(['location_id' => $outlet2->id, 'notes' => 'Contoh permintaan besar untuk akhir pekan', 'lines' => [
+                ['item_id' => $dimsum->id, 'unit_id' => $unit('pak'), 'qty' => 20],
+            ]], $kasir2);
+            $production->plan(['output_item_id' => $dimsum->id, 'unit_id' => $unit('pak'), 'qty' => 6, 'stock_request_id' => $request->id,
+                'planned_date' => now()->addDay()->toDateString(), 'notes' => 'Contoh rencana untuk permintaan Outlet 2'], $gudang);
         });
     }
 }

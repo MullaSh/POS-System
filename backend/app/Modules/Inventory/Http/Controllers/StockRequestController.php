@@ -10,6 +10,8 @@ use App\Modules\Inventory\Models\StockRequestLine;
 use App\Modules\Inventory\Services\StockAccess;
 use App\Modules\Inventory\Services\StockRequestService;
 use App\Modules\Location\Models\Location;
+use App\Modules\Production\Models\ProductionOrder;
+use App\Modules\Recipe\Models\Recipe;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -136,6 +138,10 @@ class StockRequestController
             ? StockBalance::query()->where('location_id', $warehouseId)->whereIn('item_id', $r->lines->pluck('item_id'))->pluck('qty', 'item_id')
             : null;
 
+        // Barang yang punya resep produksi dapat dibuatkan Production Order bila stok gudang kurang (irisan 8).
+        $producible = Recipe::query()->where('kind', Recipe::KIND_PRODUCTION)->whereIn('output_item_id', $r->lines->pluck('item_id'))->pluck('output_item_id')->all();
+        $productions = ProductionOrder::query()->with('outputItem:id,name')->where('stock_request_id', $r->id)->orderBy('id')->get();
+
         return [
             ...$this->summary($r, $viewer),
             'lines' => $r->lines->map(fn (StockRequestLine $l) => [
@@ -145,6 +151,10 @@ class StockRequestController
                 'qty' => $l->qty,
                 'entered_qty' => $this->inUnit($l->qty, $l->factor),
                 'warehouse_qty' => $stock === null ? null : (string) ($stock->get($l->item_id) ?? '0'),
+                'producible' => in_array((int) $l->item_id, array_map('intval', $producible), true),
+            ])->values(),
+            'productions' => $productions->map(fn (ProductionOrder $o) => [
+                'id' => $o->id, 'number' => $o->number, 'status' => $o->status, 'item' => $o->outputItem?->name,
             ])->values(),
         ];
     }

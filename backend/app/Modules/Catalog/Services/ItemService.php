@@ -48,13 +48,19 @@ class ItemService
         });
     }
 
-    /** @param  array{name: string, notes?: string|null}  $data */
+    /** @param  array{name: string, notes?: string|null, shelf_life_days?: int|null}  $data */
     public function update(Item $item, array $data): Item
     {
-        return DB::transaction(function () use ($item, $data) {
-            $before = $item->only(['name', 'notes']);
-            $item->update(['name' => $data['name'], 'notes' => $data['notes'] ?? null]);
-            $after = $item->only(['name', 'notes']);
+        // Umur simpan hanya untuk barang setengah jadi (keputusan Owner 6 Nov 2026, irisan 8).
+        $shelf = array_key_exists('shelf_life_days', $data) ? $data['shelf_life_days'] : $item->shelf_life_days;
+        if ($shelf !== null && $item->item_type !== Item::TYPE_SEMI_FINISHED) {
+            throw ValidationException::withMessages(['shelf_life_days' => 'Umur simpan hanya diatur untuk barang setengah jadi.']);
+        }
+
+        return DB::transaction(function () use ($item, $data, $shelf) {
+            $before = $item->only(['name', 'notes', 'shelf_life_days']);
+            $item->update(['name' => $data['name'], 'notes' => $data['notes'] ?? null, 'shelf_life_days' => $shelf]);
+            $after = $item->only(['name', 'notes', 'shelf_life_days']);
 
             $changes = [];
             foreach ($after as $key => $value) {
