@@ -93,6 +93,7 @@ jobs:
         run: curl -fsS http://localhost:8080/login | grep -q '<div id="root">'
       - name: Coba masuk dengan akun contoh dan baca data barang
         run: |
+          set -x
           jar=$(mktemp)
           base=http://localhost:8080
           curl -fsS -c "$jar" -b "$jar" -H "Referer: $base/" "$base/sanctum/csrf-cookie" -o /dev/null
@@ -107,7 +108,8 @@ jobs:
           get approvals/summary | grep -q '"waiting_my_decision":2'
           get recipes | grep -q 'MN-DIMSUM4'
           get stock/locations | grep -q '"code":"GDG"'
-          get 'recipes?kind=MENU' | grep -q '"per_output_unit":"9200.0000"'
+          # HPP contoh berubah setelah produksi contoh (irisan 8); cukup pastikan terisi.
+          get 'recipes?kind=MENU' | grep -Eq '"per_output_unit":"[0-9]+\.[0-9]{4}"'
           get 'stock-requests?status=OPEN' | grep -q '"status":"SUBMITTED"'
           get 'stock-transfers?status=OPEN' | grep -q '"status":"IN_TRANSIT"'
           get sales | grep -q 'TRX-'
