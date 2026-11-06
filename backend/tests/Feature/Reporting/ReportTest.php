@@ -39,7 +39,7 @@ class ReportTest extends TestCase
         $this->finance = User::query()->where('username', 'finance1')->firstOrFail();
     }
 
-    private function get(string $path, ?User $as = null): array
+    private function report(string $path, ?User $as = null): array
     {
         Sanctum::actingAs($as ?? $this->owner);
 
@@ -63,7 +63,7 @@ class ReportTest extends TestCase
 
     public function test_profit_matches_sales_refunds_and_stock_records(): void
     {
-        $p = $this->get('profit');
+        $p = $this->report('profit');
         $t = $p['total'];
         $from = $p['period']['from'];
         $to = $p['period']['to'];
@@ -88,25 +88,25 @@ class ReportTest extends TestCase
         // Hasil gagal produksi tidak dihitung lagi sebagai kerugian.
         $this->assertSame($wh['waste'] + $wh['transit_loss'] + $wh['count_adjustment'] + $wh['refund_made'], $wh['stock_loss']);
 
-        $menu = $this->get('menu-hpp');
+        $menu = $this->report('menu-hpp');
         $this->assertSame($t['net_sales'], $menu['total']['revenue']);
     }
 
     public function test_valuation_movements_and_cash_flow_agree_with_ledger(): void
     {
-        $v = $this->get('inventory-valuation');
+        $v = $this->report('inventory-valuation');
         $expected = 0;
         foreach (StockBalance::query()->where('qty', '<>', 0)->get() as $b) {
             $expected += $b->avg_cost === null ? 0 : (int) Decimal::round(bcmul((string) $b->qty, (string) $b->avg_cost, 8), 0);
         }
         $this->assertSame($expected, $v['total']['value']);
 
-        $m = $this->get('stock-movements');
+        $m = $this->report('stock-movements');
         foreach ($m['rows'] as $r) {
             $this->assertSame(0, Decimal::cmp(bcsub(bcadd($r['opening_qty'], $r['in_qty'], 4), $r['out_qty'], 4), $r['closing_qty']), $r['item']['code'].' '.$r['location']['code']);
         }
 
-        $cf = $this->get('cash-flow');
+        $cf = $this->report('cash-flow');
         $paid = (int) DB::table('sale_payments')->sum('amount');
         $back = (int) DB::table('sale_refund_payments as rp')->join('sale_refunds as r', 'r.id', '=', 'rp.sale_refund_id')->whereNotNull('r.applied_at')->sum('rp.amount');
         $this->assertSame($paid - $back, $cf['in_total']);
@@ -115,7 +115,7 @@ class ReportTest extends TestCase
 
     public function test_business_category_discrepancy_reduces_net_profit_and_staff_does_not(): void
     {
-        $before = $this->get('profit')['total']['net_profit'];
+        $before = $this->report('profit')['total']['net_profit'];
         $qris = PaymentMethod::query()->findOrFail(DB::table('sale_payments')->where('is_cash', false)->value('payment_method_id'));
         $today = now()->setTimezone('Asia/Jakarta')->toDateString();
 
@@ -127,10 +127,10 @@ class ReportTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('category');
         $this->postJson('/api/v1/cash/discrepancies/resolve', ['subject_type' => 'noncash_reconciliation', 'subject_id' => $id, 'decision' => 'Masuk usaha', 'category' => 'BUSINESS'])->assertCreated();
 
-        $after = $this->get('profit');
+        $after = $this->report('profit');
         $this->assertSame($before + 1000, $after['total']['net_profit']);
         $this->assertSame(-1000, $after['total']['cash_business_loss']);
-        $this->assertSame(1, $this->get('cash-reconciliation')['categories']['BUSINESS']['count']);
+        $this->assertSame(1, $this->report('cash-reconciliation')['categories']['BUSINESS']['count']);
     }
 
     public function test_control_blocked_attempt_is_recorded_and_shown_on_dashboard(): void
@@ -149,7 +149,7 @@ class ReportTest extends TestCase
         $log = AuditLog::query()->where('action', 'CONTROL_BLOCKED')->latest('id')->firstOrFail();
         $this->assertSame('BUYER_RECEIVES', $log->changes['kontrol']);
 
-        $d = $this->get('dashboard');
+        $d = $this->report('dashboard');
         $this->assertSame(1, $d['watch']['counts']['blocked']);
         $this->assertContains('CONTROL_BLOCKED', array_column($d['watch']['latest'], 'action'));
         $this->assertGreaterThanOrEqual(1, $d['watch']['counts']['waste']);
