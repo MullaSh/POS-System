@@ -43,7 +43,7 @@ await session('finance1', [
   ['kas', '/kas'],
   ['petty-cash', '/kas', 'a[href^="/kas/petty-cash"]'],
   ['rekonsiliasi', '/kas/rekonsiliasi'],
-  ['pr', '/pembelian'],
+  ['pr', '/pembelian/pr'],
   ['po', '/pembelian/po'],
   ['po-detail', '/pembelian/po/1'],
   ['hutang', '/pembelian/hutang'],
@@ -53,7 +53,7 @@ await session('gudang1', [
   ['permintaan', '/permintaan-stok'],
   ['permintaan-detail', '/permintaan-stok', 'tbody a'],
   ['pengiriman-baru', '/pengiriman/baru?jenis=DISTRIBUTION'],
-  ['pr', '/pembelian'],
+  ['pr', '/pembelian/pr'],
   ['pr-baru', '/pembelian/pr/baru'],
   ['po-terima', '/pembelian/po/1', 'button:has-text("Terima barang")'],
 ])

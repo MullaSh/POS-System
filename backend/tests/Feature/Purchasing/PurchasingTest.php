@@ -313,6 +313,7 @@ class PurchasingTest extends TestCase
             ->assertCreated()->json('data');
         $a = $make();
         $b = $make();
+        $this->getJson('/api/v1/purchasing/requests?status=OPEN')->assertOk()->assertJsonCount(2, 'data');
         $this->postJson("/api/v1/approvals/{$a['approval']['id']}/cancel")->assertOk();
         $this->assertSame('CANCELLED', PurchaseRequest::query()->findOrFail($a['id'])->status);
 

@@ -32,6 +32,9 @@ export function ApprovalsPage() {
   const { data: me } = useMe()
   const isOwner = hasRole(me, 'OWNER')
   const decides = isOwner || (me?.approval_types?.length ?? 0) > 0
+  // Finance memutuskan Purchase Request sebagai perannya sendiri (irisan 7); jenis lain datang dari delegasi.
+  const own = hasRole(me, 'FINANCE') ? ['PURCHASE_REQUEST'] : []
+  const delegated = (me?.approval_types ?? []).filter((t) => !own.includes(t))
   const [tab, setTab] = useState<'OPEN' | 'DONE'>('OPEN')
   const list = useQuery({
     queryKey: [...APPROVALS_KEY, 'list', tab],
@@ -45,9 +48,9 @@ export function ApprovalsPage() {
         purpose={decides ? 'Pengajuan yang menunggu keputusan Anda, dan riwayatnya.' : 'Pengajuan yang Anda kirim dan statusnya.'}
       />
       <InfoBanner className="mb-4">
-        {!isOwner && decides && (
+        {!isOwner && delegated.length > 0 && (
           <p className="mb-2 font-medium text-foreground">
-            Anda menerima delegasi untuk: {me?.approval_types?.map((t) => APPROVAL_TYPE_LABEL[t]).join(', ')}. Keputusan Anda dicatat sebagai keputusan atas delegasi.
+            Anda menerima delegasi untuk: {delegated.map((t) => APPROVAL_TYPE_LABEL[t]).join(', ')}. Keputusan Anda dicatat sebagai keputusan atas delegasi.
           </p>
         )}
         {decides

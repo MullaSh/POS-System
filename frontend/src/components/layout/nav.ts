@@ -44,7 +44,7 @@ export const NAV: NavGroup[] = [
   {
     title: 'Pembelian',
     items: [
-      { to: '/pembelian', label: 'Purchase Request', icon: FileText, roles: ['OWNER', 'FINANCE', 'WAREHOUSE'] },
+      { to: '/pembelian/pr', label: 'Purchase Request', icon: FileText, roles: ['OWNER', 'FINANCE', 'WAREHOUSE'] },
       { to: '/pembelian/po', label: 'Purchase Order', icon: PackageCheck, roles: ['OWNER', 'FINANCE', 'WAREHOUSE'] },
       { to: '/pembelian/hutang', label: 'Hutang supplier', icon: HandCoins, roles: ['OWNER', 'FINANCE'] },
     ],

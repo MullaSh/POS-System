@@ -66,8 +66,7 @@ function ReasonForm({ label, submit, pending, error, onSubmit, onCancel, destruc
 export function PurchaseRequestsPage() {
   const me = useMe().data
   const [tab, setTab] = useState<'ACTION' | 'ALL'>('ACTION')
-  const isFinance = hasRole(me, 'FINANCE')
-  const status = tab === 'ALL' ? '' : isFinance ? 'APPROVED' : 'PENDING'
+  const status = tab === 'ALL' ? '' : 'OPEN'
   const list = useQuery({
     queryKey: [...PURCHASING_KEY, 'requests', status],
     queryFn: () => http.get<Paginated<PurchaseRequest>>(`/purchasing/requests${status ? `?status=${status}` : ''}`),
@@ -84,7 +83,7 @@ export function PurchaseRequestsPage() {
         Alurnya: gudang membuat PR → Finance menyetujui (di halaman Persetujuan) → Finance membuat PO ke supplier → gudang menerima barang dan memeriksa kualitasnya.
         Outlet tidak membeli stok sendiri; pembelian kecil yang mendesak memakai Petty Cash.
       </InfoBanner>
-      <Tabs value={tab} onChange={setTab} options={[['ACTION', isFinance ? 'Siap dipesan' : 'Menunggu Finance'], ['ALL', 'Semua']] as const} />
+      <Tabs value={tab} onChange={setTab} options={[['ACTION', 'Belum dipesan'], ['ALL', 'Semua']] as const} />
       {list.isPending ? <Loading /> : list.error ? <ErrorAlert message={errorText(list.error)} /> : (
         <Table>
           <thead><tr><Th>Nomor</Th><Th>Diajukan</Th><Th>Dibutuhkan</Th><Th>Barang</Th><Th>Status</Th><Th /></tr></thead>
@@ -134,7 +133,7 @@ export function PurchaseRequestFormPage() {
         {err && !Object.keys(err.errors).some((k) => k.startsWith('lines')) && <ErrorAlert message={err.message} />}
         <div className="flex gap-2">
           <Button type="submit" disabled={save.isPending}>Ajukan ke Finance</Button>
-          <Button asChild variant="ghost"><Link to="/pembelian">Batal</Link></Button>
+          <Button asChild variant="ghost"><Link to="/pembelian/pr">Batal</Link></Button>
         </div>
       </form>
     </div>

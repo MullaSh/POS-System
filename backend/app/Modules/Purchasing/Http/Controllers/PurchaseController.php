@@ -47,9 +47,11 @@ class PurchaseController
     public function requests(Request $request): JsonResponse
     {
         $this->ensureCanView($request->user());
-        $data = $request->validate(['status' => ['nullable', Rule::in(['PENDING', 'APPROVED', 'ORDERED', 'REJECTED', 'CANCELLED', 'CLOSED'])]]);
+        $data = $request->validate(['status' => ['nullable', Rule::in(['OPEN', 'PENDING', 'APPROVED', 'ORDERED', 'REJECTED', 'CANCELLED', 'CLOSED'])]]);
+        $status = $data['status'] ?? null;
         $page = PurchaseRequest::query()->with(['requester:id,name', 'approval', 'lines.item', 'lines.unit'])
-            ->when($data['status'] ?? null, fn ($q, $s) => $q->where('status', $s))
+            ->when($status === 'OPEN', fn ($q) => $q->whereIn('status', [PurchaseRequest::STATUS_PENDING, PurchaseRequest::STATUS_APPROVED]))
+            ->when($status && $status !== 'OPEN', fn ($q) => $q->where('status', $status))
             ->orderByDesc('id')->paginate(50);
         $page->getCollection()->transform(fn (PurchaseRequest $pr) => $this->presentRequest($pr, $request->user()));
 

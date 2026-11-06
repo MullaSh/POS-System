@@ -74,7 +74,8 @@ export default function App() {
         <Route path="kas/petty-cash/:id" element={<PettyCashPage />} />
         <Route path="kas/rekonsiliasi" element={<RequireAuth role={['OWNER', 'FINANCE']}><ReconciliationPage /></RequireAuth>} />
         <Route path="kas/selisih" element={<RequireAuth role={['OWNER', 'FINANCE']}><DiscrepanciesPage /></RequireAuth>} />
-        <Route path="pembelian" element={<RequireAuth role={BUYERS}><PurchaseRequestsPage /></RequireAuth>} />
+        <Route path="pembelian" element={<Navigate to="/pembelian/pr" replace />} />
+        <Route path="pembelian/pr" element={<RequireAuth role={BUYERS}><PurchaseRequestsPage /></RequireAuth>} />
         <Route path="pembelian/pr/baru" element={<RequireAuth role="WAREHOUSE"><PurchaseRequestFormPage /></RequireAuth>} />
         <Route path="pembelian/pr/:id" element={<RequireAuth role={BUYERS}><PurchaseRequestDetailPage /></RequireAuth>} />
         <Route path="pembelian/po" element={<RequireAuth role={BUYERS}><PurchaseOrdersPage /></RequireAuth>} />
