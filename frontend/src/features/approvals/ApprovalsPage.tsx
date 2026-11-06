@@ -14,7 +14,7 @@ import { ITEMS_KEY } from '@/features/catalog/queries'
 import { SALES_KEY } from '@/features/sales/queries'
 import { STOCK_KEY } from '@/features/stock/queries'
 import { ApiError, errorText, http } from '@/lib/api'
-import { APPROVAL_ACTION_LABEL, APPROVAL_STATUS_LABEL, APPROVAL_TYPE_LABEL, formatDateTime } from '@/lib/format'
+import { APPROVAL_ACTION_LABEL, APPROVAL_STATUS_LABEL, APPROVAL_TYPE_LABEL, formatDateTime, formatQty, formatRupiah } from '@/lib/format'
 import type { Approval, ApprovalStatus, Paginated } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { APPROVALS_KEY } from './queries'
@@ -101,6 +101,7 @@ function ApprovalCard({ approval: a }: { approval: Approval }) {
     qc.invalidateQueries({ queryKey: ITEMS_KEY })
     qc.invalidateQueries({ queryKey: STOCK_KEY })
     qc.invalidateQueries({ queryKey: SALES_KEY })
+    qc.invalidateQueries({ queryKey: ['purchasing'] })
   }
   const act = useMutation({
     mutationFn: ({ action, body }: { action: string; body?: unknown }) => http.post(`/approvals/${a.id}/${action}`, body),
@@ -122,6 +123,8 @@ function ApprovalCard({ approval: a }: { approval: Approval }) {
               {a.subject.type === 'item' ? <Link to={`/barang/${a.subject.id}`} className="hover:underline">{a.title}</Link>
                 : a.subject.type === 'stock_count' ? <Link to={`/stok/opname/${a.subject.id}`} className="hover:underline">{a.title}</Link>
                 : a.type === 'SALE_REFUND' ? <Link to={`/penjualan/${String(a.payload.sale_id)}`} className="hover:underline">{a.title}</Link>
+                : a.type === 'PURCHASE_REQUEST' ? <Link to={`/pembelian/pr/${a.subject.id}`} className="hover:underline">{a.title}</Link>
+                : a.type === 'PURCHASE_ORDER' ? <Link to={`/pembelian/po/${a.subject.id}`} className="hover:underline">{a.title}</Link>
                 : a.title}
             </p>
             <p className="text-lg">{a.summary}</p>
@@ -140,6 +143,13 @@ function ApprovalCard({ approval: a }: { approval: Approval }) {
             ))}
           </ul>
         )}
+        {(a.type === 'PURCHASE_REQUEST' || a.type === 'PURCHASE_ORDER') && Array.isArray(a.payload.lines) && (
+          <ul className="list-disc pl-5 text-sm">
+            {(a.payload.lines as { item_name: string; qty: string; unit_code: string | null; line_total?: number }[]).map((l, i) => (
+              <li key={i}>{l.item_name} {formatQty(l.qty)} {l.unit_code}{l.line_total !== undefined && ` — ${formatRupiah(l.line_total)}`}</li>
+            ))}
+          </ul>
+        )}
         {a.delegation && <p className="text-sm text-muted-foreground">Diputuskan atas delegasi dari {a.delegation.delegator?.name} ({a.delegation.number}).</p>}
         {a.decision_note && (
           <p className="text-sm">
@@ -152,7 +162,9 @@ function ApprovalCard({ approval: a }: { approval: Approval }) {
             {a.can.decide && (
               <>
                 <Button size="sm" disabled={act.isPending} onClick={() => act.mutate({ action: 'approve' })}>Setujui</Button>
-                <Button size="sm" variant="outline" onClick={() => { act.reset(); setMode('return') }}>Kembalikan</Button>
+                {a.type !== 'PURCHASE_REQUEST' && a.type !== 'PURCHASE_ORDER' && (
+                  <Button size="sm" variant="outline" onClick={() => { act.reset(); setMode('return') }}>Kembalikan</Button>
+                )}
                 <Button size="sm" variant="outline" onClick={() => { act.reset(); setMode('reject') }}>Tolak</Button>
               </>
             )}

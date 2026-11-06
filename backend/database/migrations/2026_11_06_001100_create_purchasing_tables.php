@@ -156,13 +156,19 @@ return new class extends Migration
             BEGIN
                 IF TG_OP = 'DELETE' THEN RAISE EXCEPTION 'Dokumen pembelian tidak dapat dihapus; batalkan atau tutup dengan alasan'; END IF;
                 IF OLD.status IN ('REJECTED', 'CANCELLED', 'CLOSED') THEN RAISE EXCEPTION 'Dokumen pembelian yang sudah selesai tidak dapat diubah'; END IF;
-                IF TG_TABLE_NAME = 'purchase_orders' AND (NEW.total <> OLD.total OR NEW.supplier_id <> OLD.supplier_id OR NEW.purchase_request_id <> OLD.purchase_request_id) THEN
+                RETURN NEW;
+            END; $$ LANGUAGE plpgsql;
+            -- Kolom PO diperiksa di fungsi terpisah: plpgsql menolak NEW.total pada tabel PR.
+            CREATE OR REPLACE FUNCTION purchase_orders_content_guard() RETURNS trigger AS $$
+            BEGIN
+                IF NEW.total <> OLD.total OR NEW.supplier_id <> OLD.supplier_id OR NEW.purchase_request_id <> OLD.purchase_request_id THEN
                     RAISE EXCEPTION 'Isi PO tidak dapat diubah';
                 END IF;
                 RETURN NEW;
             END; $$ LANGUAGE plpgsql;
             CREATE TRIGGER purchase_requests_guard BEFORE UPDATE OR DELETE ON purchase_requests FOR EACH ROW EXECUTE FUNCTION purchase_docs_guard();
             CREATE TRIGGER purchase_orders_guard BEFORE UPDATE OR DELETE ON purchase_orders FOR EACH ROW EXECUTE FUNCTION purchase_docs_guard();
+            CREATE TRIGGER purchase_orders_content_guard BEFORE UPDATE ON purchase_orders FOR EACH ROW EXECUTE FUNCTION purchase_orders_content_guard();
         SQL);
     }
 
@@ -173,6 +179,6 @@ return new class extends Migration
         foreach (['supplier_payments', 'supplier_invoices', 'goods_receipt_lines', 'goods_receipts', 'purchase_lines', 'purchase_orders', 'purchase_requests', 'app_settings'] as $t) {
             Schema::dropIfExists($t);
         }
-        DB::unprepared('DROP FUNCTION IF EXISTS purchase_docs_guard();');
+        DB::unprepared('DROP FUNCTION IF EXISTS purchase_docs_guard(); DROP FUNCTION IF EXISTS purchase_orders_content_guard();');
     }
 };

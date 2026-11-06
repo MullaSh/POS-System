@@ -108,7 +108,7 @@ export type ApprovalAction = 'SUBMITTED' | 'RESUBMITTED' | 'APPROVED' | 'REJECTE
 
 type PersonRef = { id: number; name: string; username: string }
 
-export type ApprovalType = 'ITEM_PRICE' | 'STOCK_COUNT' | 'SALE_REFUND'
+export type ApprovalType = 'ITEM_PRICE' | 'STOCK_COUNT' | 'SALE_REFUND' | 'PURCHASE_REQUEST' | 'PURCHASE_ORDER'
 
 export type Approval = {
   id: number
@@ -636,4 +636,95 @@ export type Discrepancy = {
   at: string
   link: string
   resolution: { decision: string; by: string | null; at: string } | null
+}
+
+// --- Pembelian (irisan 7) ---
+
+export type PurchaseRequestStatus = 'PENDING' | 'APPROVED' | 'ORDERED' | 'REJECTED' | 'CANCELLED' | 'CLOSED'
+export type PurchaseOrderStatus = 'WAITING_OWNER' | 'ORDERED' | 'PARTIAL' | 'RECEIVED' | 'CLOSED' | 'REJECTED' | 'CANCELLED'
+export type RejectReason = 'DAMAGED' | 'EXPIRED' | 'WRONG_ITEM' | 'OTHER'
+
+/** Harga null bagi gudang (2G-Q2). */
+export type PurchaseLineRow = {
+  id: number | null
+  item: { id: number; code?: string; name: string }
+  unit: { id: number; code: string | null }
+  qty: string
+  unit_price: number | null
+  line_total: number | null
+  remaining?: string | null
+}
+
+export type PurchaseRequest = {
+  id: number
+  number: string
+  status: PurchaseRequestStatus
+  requested_by: { id: number; name: string } | null
+  created_at: string
+  needed_by: string | null
+  reason: string | null
+  approval: { id: number; number: string; status: ApprovalStatus; decision_note: string | null } | null
+  close_note: string | null
+  lines: PurchaseLineRow[]
+  orders: { id: number; number: string; status: PurchaseOrderStatus }[] | null
+  can: { order: boolean; close: boolean }
+}
+
+export type GoodsReceiptRow = {
+  id: number
+  number: string
+  received_by: { id: number; name: string } | null
+  received_at: string
+  supplier_doc: string | null
+  note: string | null
+  accepted_value: number | null
+  invoice: { id: number; number: string } | null
+  lines: { item: { id: number; name: string }; qty_accepted: string; qty_rejected: string; reject_reason: RejectReason | null; reject_note: string | null; batch_no: string | null; expiry_date: string | null }[]
+}
+
+export type PurchaseOrder = {
+  id: number
+  number: string
+  status: PurchaseOrderStatus
+  request: { id: number; number: string } | null
+  supplier: { id: number; code: string; name: string; phone: string | null; payment_term_days: number } | null
+  total: number | null
+  expected_date: string | null
+  note: string | null
+  created_by: { id: number; name: string } | null
+  created_at: string
+  ordered_at: string | null
+  closed_by: { id: number; name: string } | null
+  closed_at: string | null
+  close_note: string | null
+  approval: { id: number; number: string; status: ApprovalStatus } | null
+  lines: PurchaseLineRow[] | null
+  receipts: GoodsReceiptRow[] | null
+  can: { receive: boolean; cancel: boolean; close: boolean; invoice: boolean }
+}
+
+export type SupplierInvoice = {
+  id: number
+  number: string
+  invoice_no: string
+  supplier: { id: number; code: string; name: string } | null
+  receipt: { id: number; number: string; po: { id: number; number: string } | null } | null
+  invoice_date: string
+  due_date: string
+  expected_amount: number
+  amount: number
+  difference_note: string | null
+  paid: number
+  outstanding: number
+  overdue: boolean
+  recorded_by: { id: number; name: string } | null
+  payments: { id: number; number: string; amount: number; paid_date: string; method: 'TRANSFER' | 'CASH'; reference: string | null; by: string | null }[]
+}
+
+export type Payables = {
+  invoices: SupplierInvoice[]
+  uninvoiced: { id: number; number: string; po: string | null; supplier: string | null; received_at: string; accepted_value: number; supplier_doc: string | null; term_days: number | null }[]
+  by_supplier: { supplier: { id: number; code: string; name: string } | null; outstanding: number; overdue: number }[]
+  total_outstanding: number
+  can_act: boolean
 }

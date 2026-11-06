@@ -163,6 +163,40 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   PETTY_CASH_REFILLED: 'Petty Cash diisi ulang',
   NONCASH_RECONCILED: 'Non-tunai dicocokkan',
   DISCREPANCY_RESOLVED: 'Selisih diputuskan',
+  PURCHASE_REQUEST_CLOSED: 'PR ditutup',
+  PURCHASE_ORDER_CREATED: 'PO dibuat',
+  PURCHASE_ORDER_CANCELLED: 'PO dibatalkan',
+  PURCHASE_ORDER_CLOSED: 'PO ditutup',
+  GOODS_RECEIVED: 'Barang supplier diterima',
+  SUPPLIER_INVOICE_RECORDED: 'Tagihan supplier dicatat',
+  SUPPLIER_PAID: 'Supplier dibayar',
+  SETTING_CHANGED: 'Pengaturan diubah',
+}
+
+export const PR_STATUS_LABEL: Record<string, string> = {
+  PENDING: 'Menunggu Finance',
+  APPROVED: 'Disetujui, belum dipesan',
+  ORDERED: 'Sudah dipesan',
+  REJECTED: 'Ditolak',
+  CANCELLED: 'Dibatalkan',
+  CLOSED: 'Ditutup',
+}
+
+export const PO_STATUS_LABEL: Record<string, string> = {
+  WAITING_OWNER: 'Menunggu Owner',
+  ORDERED: 'Dipesan, menunggu barang',
+  PARTIAL: 'Diterima sebagian',
+  RECEIVED: 'Diterima lengkap',
+  CLOSED: 'Ditutup',
+  REJECTED: 'Ditolak Owner',
+  CANCELLED: 'Dibatalkan',
+}
+
+export const REJECT_REASON_LABEL: Record<string, string> = {
+  DAMAGED: 'Rusak',
+  EXPIRED: 'Kedaluwarsa / hampir kedaluwarsa',
+  WRONG_ITEM: 'Barang salah',
+  OTHER: 'Lainnya',
 }
 
 export function auditActionLabel(action: string): string {
@@ -231,6 +265,8 @@ export const APPROVAL_TYPE_LABEL: Record<ApprovalType, string> = {
   ITEM_PRICE: 'Perubahan harga jual',
   STOCK_COUNT: 'Penyesuaian stock opname',
   SALE_REFUND: 'Void / refund penjualan',
+  PURCHASE_REQUEST: 'Purchase Request (gudang)',
+  PURCHASE_ORDER: 'Purchase Order di atas batas Finance',
 }
 
 export const CHANNEL_LABEL: Record<SaleChannel, string> = {
