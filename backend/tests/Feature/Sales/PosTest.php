@@ -282,7 +282,8 @@ class PosTest extends TestCase
     private function expectsDatabaseUpdateToFail(callable $fn): void
     {
         try {
-            $fn();
+            // Savepoint, agar transaksi tes tetap bisa dipakai setelah database menolak.
+            DB::transaction(fn () => $fn());
             $this->fail('Perubahan seharusnya ditolak database.');
         } catch (QueryException) {
             $this->assertTrue(true);
