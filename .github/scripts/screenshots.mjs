@@ -32,6 +32,13 @@ await session('owner', [
   ['kartu-stok', '/stok/kartu', null],
   ['persetujuan', '/persetujuan'],
   ['resep', '/resep'],
+  ['penjualan', '/penjualan'],
+  ['penjualan-detail', '/penjualan', 'tbody a'],
+  ['shift', '/shift'],
+  ['delegasi', '/delegasi'],
+])
+await session('finance1', [
+  ['persetujuan', '/persetujuan'],
 ])
 await session('gudang1', [
   ['permintaan', '/permintaan-stok'],
@@ -39,6 +46,9 @@ await session('gudang1', [
   ['pengiriman-baru', '/pengiriman/baru?jenis=DISTRIBUTION'],
 ])
 await session('kasir1', [
+  ['kasir', '/kasir'],
+  ['shift-tutup', '/shift', 'tbody a'],
+  ['penjualan', '/penjualan'],
   ['stok-outlet', '/stok'],
   ['opname-baru', '/stok/opname/baru'],
   ['waste-baru', '/stok/waste/baru'],

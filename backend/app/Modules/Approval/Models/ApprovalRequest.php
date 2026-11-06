@@ -36,10 +36,11 @@ class ApprovalRequest extends Model
 
     public const TYPE_ITEM_PRICE = 'ITEM_PRICE';
     public const TYPE_STOCK_COUNT = 'STOCK_COUNT';
+    public const TYPE_SALE_REFUND = 'SALE_REFUND';
 
     protected $fillable = [
         'number', 'type', 'status', 'subject_type', 'subject_id', 'payload', 'reason',
-        'requested_by', 'requester_role_id', 'submitted_at', 'decided_by', 'decided_at', 'decision_note',
+        'requested_by', 'requester_role_id', 'submitted_at', 'decided_by', 'decided_at', 'decision_note', 'delegation_id',
     ];
 
     protected function casts(): array
@@ -64,6 +65,11 @@ class ApprovalRequest extends Model
     public function decider(): BelongsTo
     {
         return $this->belongsTo(User::class, 'decided_by');
+    }
+
+    public function delegation(): BelongsTo
+    {
+        return $this->belongsTo(ApprovalDelegation::class, 'delegation_id');
     }
 
     public function events(): HasMany

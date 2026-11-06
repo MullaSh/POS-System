@@ -14,10 +14,10 @@ export function AppLayout() {
 
   const groups = NAV.map((g) => ({
     ...g,
-    items: g.items.filter((i) => !i.roles || i.roles.some((r) => hasRole(user, r))),
+    items: g.items.filter((i) => !i.roles || i.roles.some((r) => hasRole(user, r)) || (i.orApprover && (user?.approval_types?.length ?? 0) > 0)),
   })).filter((g) => g.items.length > 0)
 
-  const canSeeApprovals = hasRole(user, 'OWNER') || hasRole(user, 'FINANCE')
+  const canSeeApprovals = hasRole(user, 'OWNER') || hasRole(user, 'FINANCE') || (user?.approval_types?.length ?? 0) > 0
   const summary = useApprovalSummary(canSeeApprovals)
   const approvalCount = (summary.data?.data.waiting_my_decision ?? 0) + (summary.data?.data.returned_to_me ?? 0)
 

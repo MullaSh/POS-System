@@ -10,6 +10,7 @@ use App\Modules\Catalog\Approvals\ItemPriceApproval;
 use App\Modules\Identity\Models\Role;
 use App\Modules\Inventory\Approvals\StockCountApproval;
 use App\Modules\Identity\Models\User;
+use App\Modules\Sales\Approvals\SaleRefundApproval;
 use App\Support\DocumentNumber;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +24,8 @@ use Illuminate\Validation\ValidationException;
  *   menunggu → batalkan oleh pengaju
  *
  * Pemisahan tugas (2F): pengaju tidak memutuskan pengajuannya sendiri.
- * Delegasi sementara (2E-Q2) menyusul di irisan 5 (keputusan Owner, 5 Nov 2026).
+ * Delegasi sementara (2E-Q2): penerima delegasi yang berlaku dapat memutuskan jenis yang
+ * didelegasikan; keputusannya diberi penanda DELEGATED (irisan 5).
  */
 class ApprovalService
 {
@@ -31,7 +33,11 @@ class ApprovalService
     private const HANDLERS = [
         ApprovalRequest::TYPE_ITEM_PRICE => ItemPriceApproval::class,
         ApprovalRequest::TYPE_STOCK_COUNT => StockCountApproval::class,
+        ApprovalRequest::TYPE_SALE_REFUND => SaleRefundApproval::class,
     ];
+
+    /** @var list<string> */
+    public const TYPES = [ApprovalRequest::TYPE_ITEM_PRICE, ApprovalRequest::TYPE_STOCK_COUNT, ApprovalRequest::TYPE_SALE_REFUND];
 
     public function __construct(private readonly AuditLogger $audit) {}
 
@@ -111,6 +117,7 @@ class ApprovalService
                 'decided_by' => null,
                 'decided_at' => null,
                 'decision_note' => null,
+                'delegation_id' => null,
             ]);
 
             $this->event($request, ApprovalEvent::RESUBMITTED, $requester, $reason, $request->payload);
@@ -142,9 +149,14 @@ class ApprovalService
         return DB::transaction(function () use ($request, $approver, $status, $eventAction, $auditAction, $note) {
             $request = $this->lock($request);
             $handler = $this->handler($request->type);
+            $role = $handler->approverRole();
 
-            if (! $approver->hasActiveRole($handler->approverRole())) {
-                throw new AuthorizationException('Anda tidak berwenang memutuskan pengajuan ini.');
+            $delegation = null;
+            if (! $approver->hasActiveRole($role)) {
+                $delegation = app(DelegationService::class)->activeFor($approver, $request->type, $role);
+                if (! $delegation) {
+                    throw new AuthorizationException('Anda tidak berwenang memutuskan pengajuan ini.');
+                }
             }
             if ($request->requested_by === $approver->id) {
                 throw new AuthorizationException('Pengajuan tidak dapat diputuskan oleh pengajunya sendiri.');
@@ -156,11 +168,13 @@ class ApprovalService
                 'decided_by' => $approver->id,
                 'decided_at' => now(),
                 'decision_note' => $note,
+                'delegation_id' => $delegation?->id,
             ]);
 
-            $this->event($request, $eventAction, $approver, $note);
-            $this->audit->record($auditAction, $request, $this->auditChanges($request, $handler), $handler->approverRole(),
-                $note, related: $this->related($request), user: $approver, subjectCode: $request->number);
+            $this->event($request, $eventAction, $approver, $note, $delegation ? ['delegasi' => $delegation->number] : null);
+            $related = $this->related($request) + ($delegation ? ['delegation' => $delegation->number, 'delegator_id' => $delegation->delegator_id] : []);
+            $this->audit->record($auditAction, $request, $this->auditChanges($request, $handler), $role,
+                $note, $delegation ? [AuditLogger::FLAG_DELEGATED] : [], related: $related, user: $approver, subjectCode: $request->number);
 
             if ($status === ApprovalRequest::STATUS_APPROVED) {
                 $handler->apply($request, $approver);

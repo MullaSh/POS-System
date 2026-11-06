@@ -22,6 +22,8 @@ export type User = {
   must_change_password: boolean
   last_login_at: string | null
   roles: RoleAssignment[]
+  /** Jenis persetujuan yang dapat diputuskan user ini, termasuk lewat delegasi (hanya dari /auth/me). */
+  approval_types?: ApprovalType[]
 }
 
 export type Location = LocationRef & {
@@ -106,10 +108,12 @@ export type ApprovalAction = 'SUBMITTED' | 'RESUBMITTED' | 'APPROVED' | 'REJECTE
 
 type PersonRef = { id: number; name: string; username: string }
 
+export type ApprovalType = 'ITEM_PRICE' | 'STOCK_COUNT' | 'SALE_REFUND'
+
 export type Approval = {
   id: number
   number: string
-  type: 'ITEM_PRICE' | 'STOCK_COUNT'
+  type: ApprovalType
   status: ApprovalStatus
   title: string
   summary: string
@@ -122,6 +126,7 @@ export type Approval = {
   decider: PersonRef | null
   decided_at: string | null
   decision_note: string | null
+  delegation?: { number: string; delegator: { id: number; name: string } | null } | null
   can: { decide: boolean; resubmit: boolean; cancel: boolean }
   events: { action: ApprovalAction; user: PersonRef | null; note: string | null; created_at: string }[] | null
 }
@@ -375,4 +380,154 @@ export type StockTransferDetail = StockTransferSummary & {
   cancel_note: string | null
   can_see_cost: boolean
   lines: StockTransferLine[]
+}
+
+// --- POS (irisan 5) ---
+
+export type SaleChannel = 'DINE_IN' | 'TAKEAWAY'
+export type ShiftStatus = 'OPEN' | 'COUNTED' | 'CLOSED'
+export type SaleStatus = 'PAID' | 'PARTLY_REFUNDED' | 'VOIDED'
+export type RefundCondition = 'NOT_MADE' | 'MADE'
+export type RefundReason = 'WRONG_INPUT' | 'CUSTOMER_CANCEL' | 'PRODUCT_ISSUE' | 'OTHER'
+type OutletRef = { id: number; code: string; name: string }
+
+export type Shift = {
+  id: number
+  number: string
+  location: OutletRef
+  cashier: PersonRef | null
+  status: ShiftStatus
+  opened_at: string
+  float_expected: number
+  float_counted: number
+  open_note: string | null
+  counted_cash: number | null
+  expected_cash: number | null
+  cash_difference: number | null
+  counted_at: string | null
+  close_note: string | null
+  float_kept: number | null
+  sales_cash: number | null
+  closed_at: string | null
+  sale_count?: number
+  is_mine?: boolean
+}
+
+export type ShiftDetail = Shift & {
+  is_mine: boolean
+  sale_count: number
+  totals: {
+    sales: number
+    cash_in: number
+    cash_out: number
+    by_method: { payment_method_id: number; name: string | null; is_cash: boolean; amount: number; count: number; refunded: number }[]
+  } | null
+  pending_refunds: { id: number; number: string; sale_id: number }[]
+}
+
+export type PosMenuItem = { id: number; code: string; name: string; price: number | null; sellable: boolean; problem: string | null }
+export type PosPaymentMethod = { id: number; code: string; name: string; is_cash: boolean }
+
+export type PosContext = {
+  outlets: OutletRef[]
+  location: OutletRef | null
+  shift: (Shift & { is_mine: boolean }) | null
+  float_expected: number
+  menu: PosMenuItem[]
+  payment_methods: PosPaymentMethod[]
+}
+
+export type SaleSummary = {
+  id: number
+  number: string
+  location: OutletRef
+  shift_id: number
+  cashier: PersonRef | null
+  channel: SaleChannel
+  total: number
+  paid_at: string
+  business_date: string
+  customer_note: string | null
+  refunded_amount: number
+  status: SaleStatus
+  has_pending_refund: boolean
+  methods: string[]
+  hpp_total: string | null
+}
+
+export type SaleRefundRow = {
+  id: number
+  number: string
+  kind: 'VOID' | 'REFUND' | null
+  amount: number | null
+  reason_code: RefundReason
+  reason: string | null
+  requested_by: PersonRef | null
+  created_at: string
+  applied_at: string | null
+  approval: {
+    id: number
+    number: string
+    status: ApprovalStatus
+    decider: PersonRef | null
+    decided_at: string | null
+    decision_note: string | null
+    delegation: { number: string; delegator: { id: number; name: string } | null } | null
+  } | null
+  lines: { sale_line_id: number; item_name: string; qty: number; amount: number; condition: RefundCondition }[]
+  payments: { payment_method_id: number; method_name: string; is_cash: boolean; amount: number }[]
+  can_cancel: boolean
+}
+
+export type SaleDetail = SaleSummary & {
+  subtotal: number
+  discount_total: number
+  tax_total: number
+  paid_total: number
+  change_total: number
+  hpp_complete: boolean | null
+  shift: { id: number; number: string; status: ShiftStatus } | null
+  lines: {
+    id: number
+    item: { id: number; code: string; name: string }
+    qty: number
+    unit_price: number
+    line_total: number
+    refunded_qty: number
+    recipe_version: { id: number; version_no: number } | null
+    unit_hpp: string | null
+    hpp_total: string | null
+    components: { item: { id: number; code: string; name: string }; base_unit: string | null; qty: string; unit_cost: string | null; cost_source: string | null }[]
+  }[]
+  payments: { payment_method_id: number; name: string; is_cash: boolean; amount: number; received: number | null; change: number | null; reference: string | null }[]
+  refunds: SaleRefundRow[]
+  can_see_cost: boolean
+  can: { refund: boolean }
+  refund_blocker: string | null
+}
+
+export type DelegationStatus = 'ACTIVE' | 'SCHEDULED' | 'EXPIRED' | 'REVOKED'
+
+export type Delegation = {
+  id: number
+  number: string
+  delegator: PersonRef | null
+  delegator_role: RoleCode
+  delegate: PersonRef | null
+  types: ApprovalType[]
+  starts_at: string
+  ends_at: string
+  reason: string | null
+  status: DelegationStatus
+  revoked_at: string | null
+  revoked_by: PersonRef | null
+  revoke_note: string | null
+  created_at: string
+  can: { revoke: boolean }
+}
+
+export type DelegationOptions = {
+  roles: { code: RoleCode; types: ApprovalType[] }[]
+  users: PersonRef[]
+  max_days: number
 }

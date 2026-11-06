@@ -21,12 +21,17 @@ import { StockPage } from '@/features/stock/StockPage'
 import { TransferDetailPage, TransferFormPage, TransfersPage } from '@/features/stock/TransferPages'
 import { SuppliersPage } from '@/features/suppliers/SuppliersPage'
 import { UsersPage } from '@/features/users/UsersPage'
+import { DelegationsPage } from '@/features/delegations/DelegationsPage'
+import { PosPage } from '@/features/pos/PosPage'
+import { ShiftDetailPage, ShiftsPage } from '@/features/pos/ShiftPages'
+import { ReceiptPage, SaleDetailPage, SalesPage } from '@/features/sales/SalesPages'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/ganti-kata-sandi" element={<RequireAuth><ChangePasswordPage /></RequireAuth>} />
+      <Route path="/penjualan/:id/struk" element={<RequireAuth role={['CASHIER', 'OWNER', 'FINANCE']}><ReceiptPage /></RequireAuth>} />
       <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
         <Route index element={<HomePage />} />
         <Route path="barang" element={<ItemsPage />} />
@@ -48,7 +53,13 @@ export default function App() {
         <Route path="pengiriman" element={<TransfersPage />} />
         <Route path="pengiriman/baru" element={<TransferFormPage />} />
         <Route path="pengiriman/:id" element={<TransferDetailPage />} />
-        <Route path="persetujuan" element={<RequireAuth role={['OWNER', 'FINANCE']}><ApprovalsPage /></RequireAuth>} />
+        <Route path="persetujuan" element={<ApprovalsPage />} />
+        <Route path="kasir" element={<RequireAuth role="CASHIER"><PosPage /></RequireAuth>} />
+        <Route path="penjualan" element={<RequireAuth role={['CASHIER', 'OWNER', 'FINANCE']}><SalesPage /></RequireAuth>} />
+        <Route path="penjualan/:id" element={<RequireAuth role={['CASHIER', 'OWNER', 'FINANCE']}><SaleDetailPage /></RequireAuth>} />
+        <Route path="shift" element={<RequireAuth role={['CASHIER', 'OWNER', 'FINANCE']}><ShiftsPage /></RequireAuth>} />
+        <Route path="shift/:id" element={<RequireAuth role={['CASHIER', 'OWNER', 'FINANCE']}><ShiftDetailPage /></RequireAuth>} />
+        <Route path="delegasi" element={<RequireAuth role={['OWNER', 'FINANCE']}><DelegationsPage /></RequireAuth>} />
         <Route path="supplier" element={<RequireAuth role={['OWNER', 'FINANCE']}><SuppliersPage /></RequireAuth>} />
         <Route path="metode-bayar" element={<RequireAuth role="OWNER"><PaymentMethodsPage /></RequireAuth>} />
         <Route path="kategori-biaya" element={<RequireAuth role="OWNER"><ExpenseCategoriesPage /></RequireAuth>} />

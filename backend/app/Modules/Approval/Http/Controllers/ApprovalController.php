@@ -5,6 +5,7 @@ namespace App\Modules\Approval\Http\Controllers;
 use App\Modules\Approval\Models\ApprovalEvent;
 use App\Modules\Approval\Models\ApprovalRequest;
 use App\Modules\Approval\Services\ApprovalService;
+use App\Modules\Approval\Services\DelegationService;
 use App\Modules\Identity\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,11 +13,15 @@ use Illuminate\Validation\Rule;
 
 /**
  * Daftar persetujuan (dokumen 11 §3.1 nomor 11).
- * Owner melihat semua pengajuan; peran lain hanya pengajuannya sendiri.
+ * Owner melihat semua pengajuan; peran lain melihat pengajuannya sendiri, ditambah pengajuan
+ * yang jenisnya didelegasikan kepadanya (2E-Q2).
  */
 class ApprovalController
 {
-    public function __construct(private readonly ApprovalService $approvals) {}
+    public function __construct(
+        private readonly ApprovalService $approvals,
+        private readonly DelegationService $delegations,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -25,10 +30,11 @@ class ApprovalController
         ]);
         /** @var User $user */
         $user = $request->user();
+        $types = $this->delegations->decidableTypes($user);
 
         $query = ApprovalRequest::query()
-            ->with(['requester:id,name,username', 'requesterRole:id,code,name', 'decider:id,name,username'])
-            ->when(! $user->isOwner(), fn ($q) => $q->where('requested_by', $user->id))
+            ->with(['requester:id,name,username', 'requesterRole:id,code,name', 'decider:id,name,username', 'delegation.delegator:id,name'])
+            ->when(! $user->isOwner(), fn ($q) => $q->where(fn ($w) => $w->where('requested_by', $user->id)->orWhereIn('type', $types)))
             ->when($request->query('status'), fn ($q, $s) => match ($s) {
                 'OPEN' => $q->whereIn('status', ApprovalRequest::OPEN_STATUSES),
                 'DONE' => $q->whereNotIn('status', ApprovalRequest::OPEN_STATUSES),
@@ -48,9 +54,10 @@ class ApprovalController
     {
         /** @var User $user */
         $user = $request->user();
-        $waiting = $user->isOwner()
-            ? ApprovalRequest::query()->where('status', ApprovalRequest::STATUS_PENDING)->where('requested_by', '<>', $user->id)->count()
-            : 0;
+        $types = $this->delegations->decidableTypes($user);
+        $waiting = $types === []
+            ? 0
+            : ApprovalRequest::query()->where('status', ApprovalRequest::STATUS_PENDING)->whereIn('type', $types)->where('requested_by', '<>', $user->id)->count();
         $returned = ApprovalRequest::query()->where('status', ApprovalRequest::STATUS_RETURNED)->where('requested_by', $user->id)->count();
 
         return response()->json(['data' => ['waiting_my_decision' => $waiting, 'returned_to_me' => $returned]]);
@@ -60,7 +67,7 @@ class ApprovalController
     {
         /** @var User $user */
         $user = $request->user();
-        if (! $user->isOwner() && $approval->requested_by !== $user->id) {
+        if (! $user->isOwner() && $approval->requested_by !== $user->id && ! in_array($approval->type, $this->delegations->decidableTypes($user), true)) {
             return response()->json(['message' => 'Anda tidak memiliki izin untuk melihat pengajuan ini.'], 403);
         }
 
@@ -110,7 +117,7 @@ class ApprovalController
     /** @return array<string, mixed> */
     public function present(ApprovalRequest $r, User $viewer, bool $withEvents = false): array
     {
-        $r->loadMissing(['requester:id,name,username', 'requesterRole:id,code,name', 'decider:id,name,username']);
+        $r->loadMissing(['requester:id,name,username', 'requesterRole:id,code,name', 'decider:id,name,username', 'delegation.delegator:id,name']);
         $handler = $this->approvals->handler($r->type);
         $isRequester = $r->requested_by === $viewer->id;
 
@@ -129,8 +136,9 @@ class ApprovalController
             'decider' => $r->decider?->only(['id', 'name', 'username']),
             'decided_at' => $r->decided_at,
             'decision_note' => $r->decision_note,
+            'delegation' => $r->delegation ? ['number' => $r->delegation->number, 'delegator' => $r->delegation->delegator?->only(['id', 'name'])] : null,
             'can' => [
-                'decide' => $r->status === ApprovalRequest::STATUS_PENDING && ! $isRequester && $viewer->hasActiveRole($handler->approverRole()),
+                'decide' => $this->delegations->canDecide($viewer, $r),
                 'resubmit' => $r->status === ApprovalRequest::STATUS_RETURNED && $isRequester,
                 'cancel' => $r->isOpen() && $isRequester,
             ],

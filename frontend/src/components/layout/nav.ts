@@ -1,4 +1,4 @@
-import { BookOpen, Boxes, ClipboardCheck, ClipboardList, CreditCard, History, Home, MapPin, PackageMinus, PackageSearch, Receipt, Ruler, Send, Truck, Users, Warehouse } from 'lucide-react'
+import { BookOpen, Boxes, ClipboardCheck, ClipboardList, Clock, CreditCard, History, Home, MapPin, PackageMinus, PackageSearch, Receipt, ReceiptText, Ruler, Send, ShoppingCart, Truck, UserCheck, Users, Warehouse } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { RoleCode } from '@/lib/types'
 
@@ -9,6 +9,8 @@ export type NavItem = {
   roles?: RoleCode[]
   /** Tampilkan jumlah pengajuan yang perlu perhatian. */
   badge?: 'approvals'
+  /** Tampilkan juga bila user dapat memutuskan persetujuan lewat delegasi (2E-Q2). */
+  orApprover?: boolean
 }
 type NavGroup = { title: string; items: NavItem[] }
 
@@ -18,7 +20,15 @@ export const NAV: NavGroup[] = [
     title: 'Umum',
     items: [
       { to: '/', label: 'Beranda', icon: Home },
-      { to: '/persetujuan', label: 'Persetujuan', icon: ClipboardCheck, roles: ['OWNER', 'FINANCE'], badge: 'approvals' },
+      { to: '/persetujuan', label: 'Persetujuan', icon: ClipboardCheck, roles: ['OWNER', 'FINANCE'], badge: 'approvals', orApprover: true },
+    ],
+  },
+  {
+    title: 'Kasir',
+    items: [
+      { to: '/kasir', label: 'Kasir', icon: ShoppingCart, roles: ['CASHIER'] },
+      { to: '/penjualan', label: 'Riwayat penjualan', icon: ReceiptText, roles: ['CASHIER', 'OWNER', 'FINANCE'] },
+      { to: '/shift', label: 'Shift kasir', icon: Clock, roles: ['CASHIER', 'OWNER', 'FINANCE'] },
     ],
   },
   {
@@ -47,6 +57,7 @@ export const NAV: NavGroup[] = [
     title: 'Pengaturan',
     items: [
       { to: '/pengguna', label: 'Pengguna & peran', icon: Users, roles: ['OWNER'] },
+      { to: '/delegasi', label: 'Delegasi persetujuan', icon: UserCheck, roles: ['OWNER', 'FINANCE'] },
       { to: '/jejak-audit', label: 'Jejak audit', icon: History, roles: ['OWNER'] },
     ],
   },

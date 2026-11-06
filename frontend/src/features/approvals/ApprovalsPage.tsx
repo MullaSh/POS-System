@@ -11,9 +11,10 @@ import { Input } from '@/components/ui/input'
 import { hasRole, useMe } from '@/features/auth/useAuth'
 import { PriceForm, type PriceInput } from '@/features/catalog/PriceForm'
 import { ITEMS_KEY } from '@/features/catalog/queries'
+import { SALES_KEY } from '@/features/sales/queries'
 import { STOCK_KEY } from '@/features/stock/queries'
 import { ApiError, errorText, http } from '@/lib/api'
-import { APPROVAL_ACTION_LABEL, APPROVAL_STATUS_LABEL, formatDateTime } from '@/lib/format'
+import { APPROVAL_ACTION_LABEL, APPROVAL_STATUS_LABEL, APPROVAL_TYPE_LABEL, formatDateTime } from '@/lib/format'
 import type { Approval, ApprovalStatus, Paginated } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { APPROVALS_KEY } from './queries'
@@ -30,6 +31,7 @@ const STATUS_VARIANT: Record<ApprovalStatus, 'default' | 'success' | 'warning' |
 export function ApprovalsPage() {
   const { data: me } = useMe()
   const isOwner = hasRole(me, 'OWNER')
+  const decides = isOwner || (me?.approval_types?.length ?? 0) > 0
   const [tab, setTab] = useState<'OPEN' | 'DONE'>('OPEN')
   const list = useQuery({
     queryKey: [...APPROVALS_KEY, 'list', tab],
@@ -40,10 +42,15 @@ export function ApprovalsPage() {
     <div className="max-w-4xl">
       <PageHeader
         title="Persetujuan"
-        purpose={isOwner ? 'Pengajuan yang menunggu keputusan Anda, dan riwayatnya.' : 'Pengajuan yang Anda kirim dan statusnya.'}
+        purpose={decides ? 'Pengajuan yang menunggu keputusan Anda, dan riwayatnya.' : 'Pengajuan yang Anda kirim dan statusnya.'}
       />
       <InfoBanner className="mb-4">
-        {isOwner
+        {!isOwner && decides && (
+          <p className="mb-2 font-medium text-foreground">
+            Anda menerima delegasi untuk: {me?.approval_types?.map((t) => APPROVAL_TYPE_LABEL[t]).join(', ')}. Keputusan Anda dicatat sebagai keputusan atas delegasi.
+          </p>
+        )}
+        {decides
           ? 'Setujui, tolak, atau kembalikan pengajuan untuk diperbaiki. Penolakan dan pengembalian wajib diberi alasan. Semua keputusan tercatat.'
           : 'Pengajuan yang dikembalikan Owner bisa diperbaiki lalu diajukan ulang. Pengajuan yang belum diputuskan bisa dibatalkan.'}
       </InfoBanner>
@@ -93,6 +100,7 @@ function ApprovalCard({ approval: a }: { approval: Approval }) {
     qc.invalidateQueries({ queryKey: APPROVALS_KEY })
     qc.invalidateQueries({ queryKey: ITEMS_KEY })
     qc.invalidateQueries({ queryKey: STOCK_KEY })
+    qc.invalidateQueries({ queryKey: SALES_KEY })
   }
   const act = useMutation({
     mutationFn: ({ action, body }: { action: string; body?: unknown }) => http.post(`/approvals/${a.id}/${action}`, body),
@@ -113,6 +121,7 @@ function ApprovalCard({ approval: a }: { approval: Approval }) {
             <p className="font-medium">
               {a.subject.type === 'item' ? <Link to={`/barang/${a.subject.id}`} className="hover:underline">{a.title}</Link>
                 : a.subject.type === 'stock_count' ? <Link to={`/stok/opname/${a.subject.id}`} className="hover:underline">{a.title}</Link>
+                : a.type === 'SALE_REFUND' ? <Link to={`/penjualan/${String(a.payload.sale_id)}`} className="hover:underline">{a.title}</Link>
                 : a.title}
             </p>
             <p className="text-lg">{a.summary}</p>
@@ -124,13 +133,21 @@ function ApprovalCard({ approval: a }: { approval: Approval }) {
           {formatDateTime(a.submitted_at)}
         </p>
         {a.reason && <p className="text-sm">Alasan: {a.reason}</p>}
+        {a.type === 'SALE_REFUND' && Array.isArray(a.payload.lines) && (
+          <ul className="list-disc pl-5 text-sm">
+            {(a.payload.lines as { sale_line_id: number; item_name: string; qty: number; condition: string }[]).map((l) => (
+              <li key={l.sale_line_id}>{l.item_name} × {l.qty} — {l.condition === 'MADE' ? 'sudah dibuat/dibuang, bahan tidak kembali' : 'belum dibuat, bahan kembali ke stok'}</li>
+            ))}
+          </ul>
+        )}
+        {a.delegation && <p className="text-sm text-muted-foreground">Diputuskan atas delegasi dari {a.delegation.delegator?.name} ({a.delegation.number}).</p>}
         {a.decision_note && (
           <p className="text-sm">
             Catatan {a.decider?.name}: <span className="font-medium">{a.decision_note}</span>
           </p>
         )}
 
-        {mode === 'none' && (a.can.decide || a.can.resubmit || a.can.cancel || a.type === 'STOCK_COUNT') && (
+        {mode === 'none' && (a.can.decide || a.can.resubmit || a.can.cancel || a.type === 'STOCK_COUNT' || a.type === 'SALE_REFUND') && (
           <div className="flex flex-wrap gap-2">
             {a.can.decide && (
               <>
@@ -140,6 +157,7 @@ function ApprovalCard({ approval: a }: { approval: Approval }) {
               </>
             )}
             {a.type === 'STOCK_COUNT' && <Button asChild size="sm" variant="outline"><Link to={`/stok/opname/${a.subject.id}`}>Lihat rincian opname</Link></Button>}
+            {a.type === 'SALE_REFUND' && <Button asChild size="sm" variant="outline"><Link to={`/penjualan/${String(a.payload.sale_id)}`}>Lihat transaksi</Link></Button>}
             {a.can.resubmit && a.type === 'ITEM_PRICE' && <Button size="sm" onClick={() => { act.reset(); setMode('resubmit') }}>Perbaiki & ajukan ulang</Button>}
             {a.can.cancel && (
               <Button size="sm" variant="ghost" disabled={act.isPending} onClick={() => act.mutate({ action: 'cancel' })}>

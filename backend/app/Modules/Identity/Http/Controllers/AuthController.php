@@ -4,6 +4,7 @@ namespace App\Modules\Identity\Http\Controllers;
 
 use App\Modules\Audit\Services\AuditLogger;
 use App\Modules\Identity\Models\User;
+use App\Modules\Approval\Services\DelegationService;
 use App\Modules\Identity\UserPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -66,7 +67,14 @@ class AuthController
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json(['user' => UserPresenter::present($request->user())]);
+        /** @var User $user */
+        $user = $request->user();
+
+        return response()->json(['user' => [
+            ...UserPresenter::present($user),
+            // Jenis persetujuan yang dapat diputuskan, termasuk lewat delegasi (2E-Q2).
+            'approval_types' => app(DelegationService::class)->decidableTypes($user),
+        ]]);
     }
 
     public function changePassword(Request $request): JsonResponse

@@ -104,12 +104,15 @@ jobs:
           get items | grep -q 'BB-AYAM'
           get items | grep -q '"current_price":25000'
           get payment-methods | grep -q '"code":"CASH"'
-          get approvals/summary | grep -q '"waiting_my_decision":1'
+          get approvals/summary | grep -q '"waiting_my_decision":2'
           get recipes | grep -q 'MN-DIMSUM4'
           get stock/locations | grep -q '"code":"GDG"'
           get 'recipes?kind=MENU' | grep -q '"per_output_unit":"9200.0000"'
           get 'stock-requests?status=OPEN' | grep -q '"status":"SUBMITTED"'
           get 'stock-transfers?status=OPEN' | grep -q '"status":"IN_TRANSIT"'
+          get sales | grep -q 'TRX-'
+          get 'shifts?status=RUNNING' | grep -q '"status":"OPEN"'
+          get delegations | grep -q '"status":"ACTIVE"'
           echo "Login dan data contoh berfungsi"
       - name: Ambil screenshot layar
         run: |

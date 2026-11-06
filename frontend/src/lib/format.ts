@@ -1,4 +1,4 @@
-import type { ApprovalAction, ApprovalStatus, ItemType, LocationStatus, MovementType, RoleCode, StockRequestStatus, TransferResolution, TransferStatus } from './types'
+import type { ApprovalAction, ApprovalStatus, ApprovalType, DelegationStatus, RefundCondition, RefundReason, SaleChannel, SaleStatus, ShiftStatus, ItemType, LocationStatus, MovementType, RoleCode, StockRequestStatus, TransferResolution, TransferStatus } from './types'
 
 const dateTime = new Intl.DateTimeFormat('id-ID', {
   day: '2-digit',
@@ -147,6 +147,13 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   STOCK_TRANSFER_RECEIVED: 'Barang diterima',
   STOCK_TRANSFER_CANCELLED: 'Pengiriman dibatalkan',
   STOCK_TRANSFER_DIFFERENCE_RESOLVED: 'Selisih kiriman dijelaskan',
+  SHIFT_OPENED: 'Buka shift',
+  SHIFT_COUNTED: 'Hitung uang laci',
+  SHIFT_CLOSED: 'Tutup shift',
+  SALE_RECORDED: 'Transaksi penjualan',
+  SALE_REFUND_APPLIED: 'Void/refund berlaku',
+  DELEGATION_CREATED: 'Delegasi dibuat',
+  DELEGATION_REVOKED: 'Delegasi dicabut',
 }
 
 export function auditActionLabel(action: string): string {
@@ -209,4 +216,52 @@ export const RESOLUTION_LABEL: Record<TransferResolution, string> = {
 export function formatSignedQty(value: string | number): string {
   const n = Number(value)
   return `${n > 0 ? '+' : ''}${formatQty(n)}`
+}
+
+export const APPROVAL_TYPE_LABEL: Record<ApprovalType, string> = {
+  ITEM_PRICE: 'Perubahan harga jual',
+  STOCK_COUNT: 'Penyesuaian stock opname',
+  SALE_REFUND: 'Void / refund penjualan',
+}
+
+export const CHANNEL_LABEL: Record<SaleChannel, string> = {
+  DINE_IN: 'Makan di tempat',
+  TAKEAWAY: 'Bawa pulang',
+}
+
+export const SHIFT_STATUS_LABEL: Record<ShiftStatus, string> = {
+  OPEN: 'Berjalan',
+  COUNTED: 'Menunggu penjelasan selisih',
+  CLOSED: 'Ditutup',
+}
+
+export const SALE_STATUS_LABEL: Record<SaleStatus, string> = {
+  PAID: 'Lunas',
+  PARTLY_REFUNDED: 'Sebagian di-refund',
+  VOIDED: 'Dibatalkan',
+}
+
+export const REFUND_REASON_LABEL: Record<RefundReason, string> = {
+  WRONG_INPUT: 'Salah input',
+  CUSTOMER_CANCEL: 'Pelanggan batal',
+  PRODUCT_ISSUE: 'Produk bermasalah',
+  OTHER: 'Lainnya',
+}
+
+export const REFUND_CONDITION_LABEL: Record<RefundCondition, string> = {
+  NOT_MADE: 'Belum dibuat — bahan kembali ke stok',
+  MADE: 'Sudah dibuat / dibuang — bahan tidak kembali',
+}
+
+export const DELEGATION_STATUS_LABEL: Record<DelegationStatus, string> = {
+  ACTIVE: 'Berlaku',
+  SCHEDULED: 'Terjadwal',
+  EXPIRED: 'Selesai',
+  REVOKED: 'Dicabut',
+}
+
+/** Rupiah bertanda untuk selisih, mis. "+Rp5.000" atau "-Rp5.000". */
+export function formatSignedRupiah(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '–'
+  return value > 0 ? `+${formatRupiah(value)}` : formatRupiah(value)
 }

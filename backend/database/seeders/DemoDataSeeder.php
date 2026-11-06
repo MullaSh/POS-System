@@ -16,7 +16,13 @@ use App\Modules\Inventory\Services\StockTransferService;
 use App\Modules\Catalog\Services\PriceService;
 use App\Modules\Recipe\Models\Recipe;
 use App\Modules\Recipe\Services\RecipeService;
+use App\Modules\Catalog\Models\PaymentMethod;
 use App\Modules\Catalog\Models\Unit;
+use App\Modules\Approval\Services\DelegationService;
+use App\Modules\Sales\Models\Sale;
+use App\Modules\Sales\Services\RefundService;
+use App\Modules\Sales\Services\SaleService;
+use App\Modules\Sales\Services\ShiftService;
 use App\Modules\Identity\Models\Role;
 use App\Modules\Identity\Models\RoleAssignment;
 use App\Modules\Identity\Models\User;
@@ -45,6 +51,9 @@ class DemoDataSeeder extends Seeder
         }
         if (! StockMovement::query()->exists()) {
             $this->seedStock();
+        }
+        if (! Sale::query()->exists()) {
+            $this->seedSales();
         }
     }
 
@@ -235,6 +244,65 @@ class DemoDataSeeder extends Seeder
                 $line('SJ-LUMPIA', 'pcs', 40),
                 $line('PK-BOWL', 'pcs', 50),
             ]], $gudang);
+        });
+    }
+
+    /**
+     * Irisan 5: menu tambahan "Extra Saus Mentai" (add-on dijual sebagai menu), shift kasir1 yang
+     * sedang berjalan di Outlet 1 dengan dua transaksi, satu pengajuan refund untuk dicoba Owner,
+     * dan contoh delegasi Owner → Finance untuk pembatalan penjualan selama 7 hari.
+     */
+    private function seedSales(): void
+    {
+        $item = fn (string $code) => Item::query()->where('code', $code)->first();
+        $owner = User::query()->where('username', 'owner')->firstOrFail();
+        $finance = User::query()->where('username', 'finance1')->first();
+        $kasir1 = User::query()->where('username', 'kasir1')->first();
+        $outlet1 = Location::query()->where('code', 'OTL01')->first();
+        $dimsum = $item('MN-DIMSUM4');
+        $mentai = $item('BP-MENTAI');
+        if (! $kasir1 || ! $finance || ! $outlet1 || ! $dimsum || ! $mentai || $outlet1->status !== Location::STATUS_ACTIVE) {
+            return;
+        }
+        $porsi = Unit::query()->where('code', 'porsi')->value('id');
+        $ml = Unit::query()->where('code', 'ml')->value('id');
+        $cash = PaymentMethod::query()->where('code', 'CASH')->value('id');
+        $qris = PaymentMethod::query()->where('code', 'QRIS')->where('is_active', true)->value('id');
+
+        DB::transaction(function () use ($item, $owner, $finance, $kasir1, $outlet1, $dimsum, $mentai, $porsi, $ml, $cash, $qris) {
+            $extra = $item('MN-EXTRA-MENTAI');
+            if (! $extra) {
+                $extra = Item::query()->create(['code' => 'MN-EXTRA-MENTAI', 'name' => 'Extra Saus Mentai', 'item_type' => Item::TYPE_MENU, 'base_unit_id' => $porsi]);
+                $extra->units()->create(['unit_id' => $porsi, 'factor_to_base' => 1, 'is_usage_default' => true]);
+                app(PriceService::class)->setDirect($extra, ['price' => 5000, 'reason' => 'Harga contoh add-on'], $owner);
+                app(RecipeService::class)->create($extra, ['notes' => 'Resep contoh', 'lines' => [['item_id' => $mentai->id, 'unit_id' => $ml, 'qty' => 30]]], $owner);
+            }
+
+            app(ShiftService::class)->open(['location_id' => $outlet1->id, 'float_counted' => ShiftService::floatAmount()], $kasir1);
+            $sales = app(SaleService::class);
+            $first = $sales->create([
+                'location_id' => $outlet1->id, 'channel' => Sale::CHANNEL_DINE_IN,
+                'lines' => [['item_id' => $dimsum->id, 'qty' => 2], ['item_id' => $extra->id, 'qty' => 1]],
+                'payments' => [['payment_method_id' => $cash, 'amount' => 60000]],
+            ], $kasir1)['sale'];
+            $sales->create([
+                'location_id' => $outlet1->id, 'channel' => Sale::CHANNEL_TAKEAWAY, 'customer_note' => 'Bu Rina',
+                'lines' => [['item_id' => $dimsum->id, 'qty' => 1]],
+                'payments' => $qris
+                    ? [['payment_method_id' => $qris, 'amount' => 15000, 'reference' => 'contoh'], ['payment_method_id' => $cash, 'amount' => 10000]]
+                    : [['payment_method_id' => $cash, 'amount' => 25000]],
+            ], $kasir1);
+
+            $extraLine = $first->lines()->where('item_id', $extra->id)->first();
+            app(RefundService::class)->request($first, [
+                'reason_code' => 'CUSTOMER_CANCEL', 'reason' => 'Contoh: pelanggan tidak jadi pesan extra saus',
+                'lines' => [['sale_line_id' => $extraLine->id, 'qty' => 1, 'condition' => 'NOT_MADE']],
+            ], $kasir1);
+
+            app(DelegationService::class)->create([
+                'delegator_role' => Role::OWNER, 'delegate_id' => $finance->id, 'types' => ['SALE_REFUND'],
+                'ends_at' => now()->addDays(7)->toIso8601String(), 'reason' => 'Contoh delegasi',
+            ], $owner);
         });
     }
 }
