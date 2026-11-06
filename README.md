@@ -46,6 +46,12 @@ Data contoh stok: saldo awal di Gudang Pusat dan Outlet 1, satu permintaan
 stok dari Outlet 1 (untuk diproses `gudang1`), dan satu kiriman ke Outlet 2
 (untuk diterima `kasir2`). Jumlah dan harga pokoknya contoh.
 
+Data contoh kasir: shift `kasir1` yang sedang berjalan di Outlet 1 dengan dua
+transaksi (satu bayar campur QRIS + tunai), satu pengajuan refund untuk
+diputuskan `owner`, menu tambahan "Extra Saus Mentai" (contoh add-on yang
+dijual sebagai menu), dan delegasi dari `owner` ke `finance1` untuk
+persetujuan void/refund selama 7 hari.
+
 Nama outlet dan barang adalah contoh. Di server sungguhan, data contoh tidak
 dipasang; akun `owner` memakai kata sandi sementara yang wajib diganti saat
 pertama masuk.
@@ -81,5 +87,6 @@ menyentuh kode).
 | 2 | Supplier, metode bayar, kategori biaya, harga jual + persetujuan | Selesai |
 | 3 | Resep menu dan resep produksi berversi, HPP dari bahan | Selesai |
 | 4 | Stok: saldo awal + harga pokok, kartu stok, batch gudang, waste, stock opname (disetujui Owner), permintaan stok, kirim/terima/retur dengan penjelasan selisih | Selesai |
-| 5 | POS: shift, transaksi, pembayaran, void/refund, delegasi persetujuan | Berikutnya |
-| 6–9 | Kas, pembelian, produksi, laporan | Belum dimulai |
+| 5 | POS: shift dengan Cash Float dan tutup shift hitung buta, transaksi dengan stok outlet dipotong per resep dan HPP terkunci, bayar campur, struk dari browser, void/refund dengan persetujuan Owner, delegasi persetujuan | Selesai |
+| 6 | Kas: tiga dana, serah terima, selisih, Petty Cash, biaya, rekonsiliasi | Berikutnya |
+| 7–9 | Pembelian, produksi, laporan | Belum dimulai |
