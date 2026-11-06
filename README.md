@@ -52,6 +52,10 @@ diputuskan `owner`, menu tambahan "Extra Saus Mentai" (contoh add-on yang
 dijual sebagai menu), dan delegasi dari `owner` ke `finance1` untuk
 persetujuan void/refund selama 7 hari.
 
+Data contoh kas: saldo tetap Petty Cash Rp200.000 per outlet (angka contoh),
+isi awal Petty Cash Outlet 1 oleh `finance1`, satu biaya Outlet 1 yang menunggu
+diperiksa Finance, dan satu biaya gudang yang dibayar Finance.
+
 Nama outlet dan barang adalah contoh. Di server sungguhan, data contoh tidak
 dipasang; akun `owner` memakai kata sandi sementara yang wajib diganti saat
 pertama masuk.
@@ -88,5 +92,6 @@ menyentuh kode).
 | 3 | Resep menu dan resep produksi berversi, HPP dari bahan | Selesai |
 | 4 | Stok: saldo awal + harga pokok, kartu stok, batch gudang, waste, stock opname (disetujui Owner), permintaan stok, kirim/terima/retur dengan penjelasan selisih | Selesai |
 | 5 | POS: shift dengan Cash Float dan tutup shift hitung buta, transaksi dengan stok outlet dipotong per resep dan HPP terkunci, bayar campur, struk dari browser, void/refund dengan persetujuan Owner, delegasi persetujuan | Selesai |
-| 6 | Kas: tiga dana, serah terima, selisih, Petty Cash, biaya, rekonsiliasi | Berikutnya |
-| 7–9 | Pembelian, produksi, laporan | Belum dimulai |
+| 6 | Kas: ringkasan tiga dana per outlet, serah terima Outlet → Gudang → Finance dengan konfirmasi dan bukti selisih, Petty Cash dan biaya (isi ulang sebesar biaya terbukti), pencocokan non-tunai harian, keputusan selisih oleh Finance | Selesai |
+| 7 | Pembelian lengkap dan hutang supplier | Berikutnya |
+| 8–9 | Produksi, laporan dan dashboard Owner | Belum dimulai |
