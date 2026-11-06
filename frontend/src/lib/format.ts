@@ -171,6 +171,31 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   SUPPLIER_INVOICE_RECORDED: 'Tagihan supplier dicatat',
   SUPPLIER_PAID: 'Supplier dibayar',
   SETTING_CHANGED: 'Pengaturan diubah',
+  PRODUCTION_PLANNED: 'Produksi direncanakan',
+  PRODUCTION_COMPLETED: 'Produksi selesai',
+  PRODUCTION_CANCELLED: 'Rencana produksi dibatalkan',
+}
+
+export const PRODUCTION_STATUS_LABEL: Record<string, string> = {
+  PLANNED: 'Rencana',
+  COMPLETED: 'Selesai',
+  CANCELLED: 'Dibatalkan',
+}
+
+/** Alasan baku hasil produksi gagal QC (keputusan Owner 6 Nov 2026). */
+export const PRODUCTION_FAIL_LABEL: Record<string, string> = {
+  MISSHAPEN: 'Bentuk rusak',
+  UNEVEN_COOK: 'Matang tidak rata',
+  PACKAGING_LEAK: 'Kemasan bocor',
+  OTHER: 'Lainnya',
+}
+
+/** Persen dengan tanda, mis. +3,33% atau -4%. */
+export function formatPct(value: string | number | null | undefined): string {
+  if (value === null || value === undefined || value === '') return '–'
+  const n = Number(value)
+  const text = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 }).format(Math.abs(n))
+  return `${n > 0 ? '+' : n < 0 ? '-' : ''}${text}%`
 }
 
 export const PR_STATUS_LABEL: Record<string, string> = {

@@ -118,6 +118,9 @@ jobs:
           get 'purchasing/requests?status=PENDING' | grep -q '"number":"PR-'
           get 'purchasing/orders?status=OPEN' | grep -q '"status":"ORDERED"'
           get purchasing/settings | grep -q '"finance_limit":5000000'
+          get 'production/orders?status=PLANNED' | grep -q '"number":"PRD-'
+          get 'production/orders?status=COMPLETED' | grep -q '"good_qty":"96.0000"'
+          get production/settings | grep -q '"variance_tolerance_pct":5'
           echo "Login dan data contoh berfungsi"
       - name: Ambil screenshot layar
         run: |

@@ -106,11 +106,19 @@ export function PurchaseRequestsPage() {
   )
 }
 
+/** Baris PR yang dibawa dari halaman lain, mis. bahan yang kurang untuk produksi: ?isi=itemId:unitId:jumlah,... */
+function presetLines(isi: string | null): Line[] {
+  const rows = (isi ?? '').split(',').map((x) => x.split(':')).filter((p) => p.length === 3 && Number(p[0]) > 0 && Number(p[2]) > 0)
+  if (rows.length === 0) return [newLine()]
+  return rows.map(([item, unit, qty]) => ({ ...newLine(), item_id: item, unit_id: unit, qty: String(Math.ceil(Number(qty) * 1000) / 1000).replace('.', ',') }))
+}
+
 export function PurchaseRequestFormPage() {
   const items = useStockItems()
-  const [lines, setLines] = useState<Line[]>([newLine()])
+  const [params] = useSearchParams()
+  const [lines, setLines] = useState<Line[]>(() => presetLines(params.get('isi')))
   const [neededBy, setNeededBy] = useState('')
-  const [reason, setReason] = useState('')
+  const [reason, setReason] = useState(params.get('catatan') ?? '')
   const qc = useQueryClient()
   const navigate = useNavigate()
   const save = useMutation({

@@ -9,7 +9,7 @@ import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { EmptyRow, Table, Td, Th } from '@/components/ui/table'
 import { ApiError, errorText, http } from '@/lib/api'
-import { STOCK_REQUEST_STATUS_LABEL, formatDate, formatDateTime, formatQty } from '@/lib/format'
+import { PRODUCTION_STATUS_LABEL, STOCK_REQUEST_STATUS_LABEL, formatDate, formatDateTime, formatQty } from '@/lib/format'
 import type { Paginated, StockRequestDetail, StockRequestStatus, StockRequestSummary } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { LinesEditor } from './LinesEditor'
@@ -136,12 +136,15 @@ export function RequestDetailPage() {
         <Badge variant={REQUEST_VARIANT[r.status]}>{STOCK_REQUEST_STATUS_LABEL[r.status]}</Badge>
         {r.needed_date && <span>Dibutuhkan {formatDate(r.needed_date)}</span>}
         {r.transfer && <span>Pengiriman <Link to={`/pengiriman/${r.transfer.id}`} className="font-mono hover:underline">{r.transfer.number}</Link></span>}
+        {r.productions?.map((p) => (
+          <span key={p.id}>Produksi <Link to={`/produksi/${p.id}`} className="font-mono hover:underline">{p.number}</Link> ({PRODUCTION_STATUS_LABEL[p.status]})</span>
+        ))}
       </div>
       {r.notes && <p className="text-sm">Catatan: {r.notes}</p>}
       {r.close_note && <p className="text-sm">{r.status === 'REJECTED' ? 'Alasan ditolak' : 'Catatan'} ({r.closed_by?.name}): <span className="font-medium">{r.close_note}</span></p>}
 
       <Table>
-        <thead><tr><Th>Barang</Th><Th className="text-right">Diminta</Th>{showWarehouse && <Th className="text-right">Stok gudang sekarang</Th>}</tr></thead>
+        <thead><tr><Th>Barang</Th><Th className="text-right">Diminta</Th>{showWarehouse && <Th className="text-right">Stok gudang sekarang</Th>}{r.can.fulfil && <Th />}</tr></thead>
         <tbody>
           {r.lines.map((l) => (
             <tr key={l.item.id}>
@@ -151,6 +154,15 @@ export function RequestDetailPage() {
                 <Td className={cn('text-right', Number(l.warehouse_qty) < Number(l.qty) && 'text-destructive')}>
                   {formatQty(l.warehouse_qty ?? 0)} {l.item.base_unit.code}
                   {Number(l.warehouse_qty) < Number(l.qty) && <p className="text-xs">kurang — perlu produksi atau kirim sebagian</p>}
+                </Td>
+              )}
+              {r.can.fulfil && (
+                <Td className="text-right">
+                  {l.producible && Number(l.warehouse_qty) < Number(l.qty) && (
+                    <Button asChild size="sm" variant="outline">
+                      <Link to={`/produksi/baru?barang=${l.item.id}&satuan=${l.item.base_unit.id}&jumlah=${Number(l.qty) - Number(l.warehouse_qty)}&permintaan=${r.id}`}>Buat Production Order</Link>
+                    </Button>
+                  )}
                 </Td>
               )}
             </tr>

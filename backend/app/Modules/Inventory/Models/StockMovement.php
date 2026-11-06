@@ -28,6 +28,8 @@ class StockMovement extends Model
 {
     public const OPENING = 'OPENING';
     public const PURCHASE_RECEIPT = 'PURCHASE_RECEIPT';
+    public const PRODUCTION_CONSUME = 'PRODUCTION_CONSUME';
+    public const PRODUCTION_OUTPUT = 'PRODUCTION_OUTPUT';
     public const TRANSFER_OUT = 'TRANSFER_OUT';
     public const TRANSFER_IN = 'TRANSFER_IN';
     public const TRANSFER_CANCEL = 'TRANSFER_CANCEL';

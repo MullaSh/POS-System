@@ -7,6 +7,8 @@ export function sourcePath(source: { type: string; id: number }): string | null 
       return `/stok/opname/${source.id}`
     case 'stock_transfer':
       return `/pengiriman/${source.id}`
+    case 'production_order':
+      return `/produksi/${source.id}`
     default:
       return null
   }

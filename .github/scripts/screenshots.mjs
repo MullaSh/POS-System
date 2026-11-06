@@ -37,6 +37,8 @@ await session('owner', [
   ['shift', '/shift'],
   ['delegasi', '/delegasi'],
   ['selisih', '/kas/selisih'],
+  ['produksi', '/produksi'],
+  ['produksi-selesai', '/produksi/1'],
 ])
 await session('finance1', [
   ['persetujuan', '/persetujuan'],
@@ -56,6 +58,12 @@ await session('gudang1', [
   ['pr', '/pembelian/pr'],
   ['pr-baru', '/pembelian/pr/baru'],
   ['po-terima', '/pembelian/po/1', 'button:has-text("Terima barang")'],
+  ['produksi', '/produksi'],
+  ['produksi-baru', '/produksi/baru?barang=3&satuan=6&jumlah=40'],
+  ['produksi-rencana', '/produksi/2'],
+  ['produksi-selesaikan', '/produksi/2', 'button:has-text("Selesaikan produksi")'],
+  ['permintaan-outlet2', '/permintaan-stok/2'],
+  ['pr-dari-produksi', '/pembelian/pr/baru?isi=1%3A2%3A3.55&catatan=Bahan%20untuk%20produksi'],
 ])
 await session('kasir1', [
   ['kasir', '/kasir'],

@@ -24,6 +24,7 @@ import { UsersPage } from '@/features/users/UsersPage'
 import { CashOverviewPage, DiscrepanciesPage, ExpensesPage, HandoverDetailPage, HandoverFormPage, HandoversPage, PettyCashPage, ReconciliationPage } from '@/features/cash/CashPages'
 import { DelegationsPage } from '@/features/delegations/DelegationsPage'
 import { PosPage } from '@/features/pos/PosPage'
+import { ProductionDetailPage, ProductionFormPage, ProductionOrdersPage } from '@/features/production/ProductionPages'
 import { ShiftDetailPage, ShiftsPage } from '@/features/pos/ShiftPages'
 import { ReceiptPage, SaleDetailPage, SalesPage } from '@/features/sales/SalesPages'
 import {
@@ -81,6 +82,9 @@ export default function App() {
         <Route path="pembelian/po" element={<RequireAuth role={BUYERS}><PurchaseOrdersPage /></RequireAuth>} />
         <Route path="pembelian/po/baru" element={<RequireAuth role="FINANCE"><PurchaseOrderFormPage /></RequireAuth>} />
         <Route path="pembelian/po/:id" element={<RequireAuth role={BUYERS}><PurchaseOrderDetailPage /></RequireAuth>} />
+        <Route path="produksi" element={<RequireAuth role={BUYERS}><ProductionOrdersPage /></RequireAuth>} />
+        <Route path="produksi/baru" element={<RequireAuth role="WAREHOUSE"><ProductionFormPage /></RequireAuth>} />
+        <Route path="produksi/:id" element={<RequireAuth role={BUYERS}><ProductionDetailPage /></RequireAuth>} />
         <Route path="pembelian/hutang" element={<RequireAuth role={['OWNER', 'FINANCE']}><PayablesPage /></RequireAuth>} />
         <Route path="delegasi" element={<RequireAuth role={['OWNER', 'FINANCE']}><DelegationsPage /></RequireAuth>} />
         <Route path="supplier" element={<RequireAuth role={['OWNER', 'FINANCE']}><SuppliersPage /></RequireAuth>} />

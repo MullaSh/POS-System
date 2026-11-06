@@ -56,6 +56,7 @@ export type ItemUnit = {
 export type ItemDetail = ItemSummary & {
   is_stock_item: boolean
   notes: string | null
+  shelf_life_days: number | null
   units: ItemUnit[]
   min_stocks: { location_id: number; location_code: string; location_name: string; min_qty: string }[]
   price: ItemPriceInfo | null
@@ -328,7 +329,8 @@ export type StockRequestSummary = {
 }
 
 export type StockRequestDetail = StockRequestSummary & {
-  lines: { item: ItemRef; unit: Unit; factor: string; qty: string; entered_qty: string; warehouse_qty: string | null }[]
+  lines: { item: ItemRef; unit: Unit; factor: string; qty: string; entered_qty: string; warehouse_qty: string | null; producible?: boolean }[]
+  productions?: { id: number; number: string; status: ProductionStatus; item: string | null }[]
 }
 
 export type TransferStatus = 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED'
@@ -727,4 +729,77 @@ export type Payables = {
   by_supplier: { supplier: { id: number; code: string; name: string } | null; outstanding: number; overdue: number }[]
   total_outstanding: number
   can_act: boolean
+}
+
+// --- Produksi (irisan 8) ---
+
+type Actor = { id: number; name: string }
+
+export type ProductionStatus = 'PLANNED' | 'COMPLETED' | 'CANCELLED'
+
+export type ProductionMaterial = {
+  id?: number
+  item: { id: number; code: string; name: string; item_type: ItemType; base_unit: Unit }
+  unit: { id: number; code: string | null }
+  factor: string
+  standard_qty: string
+  standard_entered: string
+  /** Hanya saat rencana: stok gudang sekarang dan kekurangannya. */
+  stock_qty?: string
+  shortage_qty?: string
+  shortage_entered?: string
+  actual_qty?: string | null
+  actual_entered?: string | null
+  variance_pct?: string | null
+  cost?: string | null
+}
+
+export type ProductionOrderSummary = {
+  id: number
+  number: string
+  status: ProductionStatus
+  output_item: { id: number; code: string; name: string; item_type: ItemType; shelf_life_days: number | null; base_unit: Unit } | null
+  unit: { id: number; code: string } | null
+  factor: string
+  planned_qty: string
+  planned_entered: string
+  planned_date: string | null
+  stock_request: { id: number; number: string; status: string } | null
+  notes: string | null
+  created_by: Actor | null
+  created_at: string
+  good_qty: string | null
+  good_entered: string | null
+  failed_qty: string | null
+  failed_entered: string | null
+  output_variance_pct: string | null
+  over_tolerance: boolean | null
+  tolerance_pct: string | null
+  variance_note: string | null
+  completion_note: string | null
+  batch_no: string | null
+  expiry_date: string | null
+  completed_by: Actor | null
+  completed_at: string | null
+  cancelled_by: Actor | null
+  cancelled_at: string | null
+  cancel_reason: string | null
+  /** Hanya Owner dan Finance. */
+  total_cost: string | null
+  unit_cost: string | null
+  cost_complete: boolean | null
+  failed_value: string | null
+}
+
+export type ProductionOrderDetail = ProductionOrderSummary & {
+  recipe_version_no: number | null
+  recipe_id: number | null
+  lines: ProductionMaterial[]
+  failures: { reason: string; qty: string; entered: string; note: string | null }[]
+  can: { complete: boolean; cancel: boolean; request_purchase: boolean }
+}
+
+export type ProducibleItem = ItemWithUnits & {
+  shelf_life_days: number | null
+  recipe: { id: number; version_no: number; output_qty: string; output_unit_id: number; output_entered_qty: string }
 }

@@ -1,4 +1,4 @@
-import { ArrowRightLeft, FileText, HandCoins, PackageCheck, BookOpen, Landmark, Scale, Wallet, Boxes, ClipboardCheck, ClipboardList, Clock, CreditCard, History, Home, MapPin, PackageMinus, PackageSearch, Receipt, ReceiptText, Ruler, Send, ShoppingCart, Truck, UserCheck, Users, Warehouse } from 'lucide-react'
+import { ArrowRightLeft, Factory, FileText, HandCoins, PackageCheck, BookOpen, Landmark, Scale, Wallet, Boxes, ClipboardCheck, ClipboardList, Clock, CreditCard, History, Home, MapPin, PackageMinus, PackageSearch, Receipt, ReceiptText, Ruler, Send, ShoppingCart, Truck, UserCheck, Users, Warehouse } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { RoleCode } from '@/lib/types'
 
@@ -47,6 +47,12 @@ export const NAV: NavGroup[] = [
       { to: '/pembelian/pr', label: 'Purchase Request', icon: FileText, roles: ['OWNER', 'FINANCE', 'WAREHOUSE'] },
       { to: '/pembelian/po', label: 'Purchase Order', icon: PackageCheck, roles: ['OWNER', 'FINANCE', 'WAREHOUSE'] },
       { to: '/pembelian/hutang', label: 'Hutang supplier', icon: HandCoins, roles: ['OWNER', 'FINANCE'] },
+    ],
+  },
+  {
+    title: 'Produksi',
+    items: [
+      { to: '/produksi', label: 'Production Order', icon: Factory, roles: ['OWNER', 'FINANCE', 'WAREHOUSE'] },
     ],
   },
   {

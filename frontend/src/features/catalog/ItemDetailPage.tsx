@@ -65,7 +65,12 @@ function EditBasics({ item }: { item: ItemDetail }) {
   const refresh = useRefreshItem(item.id)
   const [name, setName] = useState(item.name)
   const [notes, setNotes] = useState(item.notes ?? '')
-  const save = useMutation({ mutationFn: () => http.patch(`/items/${item.id}`, { name, notes }), onSuccess: refresh })
+  const semi = item.item_type === 'SEMI_FINISHED'
+  const [shelf, setShelf] = useState(item.shelf_life_days ? String(item.shelf_life_days) : '')
+  const save = useMutation({
+    mutationFn: () => http.patch(`/items/${item.id}`, { name, notes, ...(semi ? { shelf_life_days: shelf ? Number(shelf) : null } : {}) }),
+    onSuccess: refresh,
+  })
   const toggle = useMutation({ mutationFn: () => http.post(`/items/${item.id}/${item.is_active ? 'deactivate' : 'activate'}`), onSuccess: refresh })
   const err = save.error instanceof ApiError ? save.error : null
 
@@ -80,6 +85,12 @@ function EditBasics({ item }: { item: ItemDetail }) {
           <Field id="edit-notes" label="Catatan" error={err?.field('notes')}>
             <Input id="edit-notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
           </Field>
+          {semi && (
+            <Field id="edit-shelf" label="Umur simpan (hari, opsional)" error={err?.field('shelf_life_days')}
+              hint="Mengisi otomatis tanggal kedaluwarsa hasil produksi. Kosongkan bila tidak dipakai.">
+              <Input id="edit-shelf" inputMode="numeric" value={shelf} onChange={(e) => setShelf(e.target.value.replace(/\D/g, ''))} />
+            </Field>
+          )}
           <div className="flex flex-wrap items-center gap-2 md:col-span-2">
             <Button type="submit" disabled={save.isPending}>Simpan perubahan</Button>
             <Button type="button" variant="outline" disabled={toggle.isPending} onClick={() => toggle.mutate()}>
