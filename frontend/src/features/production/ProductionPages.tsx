@@ -310,7 +310,7 @@ export function ProductionDetailPage() {
 
       {o.status === 'COMPLETED' && (
         <div className="grid gap-3 md:grid-cols-4">
-          <Stat label="Hasil baik (masuk stok)" value={`${plain(o.good_qty)} ${base}`} hint={`${formatPct(o.output_variance_pct)} dari target`} warn={o.over_tolerance === true} />
+          <Stat label="Hasil baik (masuk stok)" value={`${plain(o.good_qty)} ${base}`} hint={`selisih dari target ${formatPct(o.output_variance_pct)}`} warn={o.over_tolerance === true} />
           <Stat label="Hasil gagal (waste produksi)" value={`${plain(o.failed_qty)} ${base}`} hint={costs ? `nilai bahan ${rupiah(o.failed_value)}` : undefined} />
           <Stat label="Batch dan kedaluwarsa" value={o.batch_no ?? '–'} hint={o.expiry_date ? `kedaluwarsa ${formatDate(o.expiry_date)}` : 'tanpa tanggal kedaluwarsa'} />
           {costs && <Stat label={`Harga pokok per ${base}`} value={rupiah(o.unit_cost)} hint={`total bahan ${rupiah(o.total_cost)}${o.cost_complete === false ? ' · sebagian bahan belum punya harga pokok' : ''}`} warn={o.cost_complete === false} />}
@@ -461,7 +461,7 @@ function CompleteForm({ order, onDone }: { order: ProductionOrderDetail; onDone:
               </Select>
             </Field>
             <div className={cn('self-end pb-2 text-sm', beyond(outputPct) ? 'font-medium text-destructive' : 'text-muted-foreground')}>
-              Target {plain(order.planned_entered)} {order.unit?.code} · hasil baik {formatPct(outputPct.toFixed(2))} dari target
+              Target {plain(order.planned_entered)} {order.unit?.code} · selisih hasil baik {formatPct(outputPct.toFixed(2))}
             </div>
           </div>
 

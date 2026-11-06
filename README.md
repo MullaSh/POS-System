@@ -56,6 +56,15 @@ Data contoh kas: saldo tetap Petty Cash Rp200.000 per outlet (angka contoh),
 isi awal Petty Cash Outlet 1 oleh `finance1`, satu biaya Outlet 1 yang menunggu
 diperiksa Finance, dan satu biaya gudang yang dibayar Finance.
 
+Data contoh pembelian: batas persetujuan Finance Rp5.000.000, satu PR yang
+menunggu `finance1`, dan satu PO ke Toko Daging Contoh yang menunggu diterima
+`gudang1`.
+
+Data contoh produksi: toleransi varians 5%, umur simpan Frozen Dimsum 90
+hari, satu produksi Frozen Dimsum yang sudah selesai (hasil baik 96 pcs, gagal
+4 pcs), dan satu permintaan besar dari Outlet 2 yang stok gudangnya kurang,
+dengan rencana produksi untuknya (untuk diselesaikan `gudang1`).
+
 Nama outlet dan barang adalah contoh. Di server sungguhan, data contoh tidak
 dipasang; akun `owner` memakai kata sandi sementara yang wajib diganti saat
 pertama masuk.
@@ -94,5 +103,5 @@ menyentuh kode).
 | 5 | POS: shift dengan Cash Float dan tutup shift hitung buta, transaksi dengan stok outlet dipotong per resep dan HPP terkunci, bayar campur, struk dari browser, void/refund dengan persetujuan Owner, delegasi persetujuan | Selesai |
 | 6 | Kas: ringkasan tiga dana per outlet, serah terima Outlet → Gudang → Finance dengan konfirmasi dan bukti selisih, Petty Cash dan biaya (isi ulang sebesar biaya terbukti), pencocokan non-tunai harian, keputusan selisih oleh Finance | Selesai |
 | 7 | Pembelian: Purchase Request gudang (disetujui Finance), Purchase Order oleh Finance (di atas batas disetujui Owner; gudang tidak melihat harga), penerimaan bertahap dengan QC Incoming, tagihan per penerimaan dengan alasan bila beda harga, pembayaran sebagian dan daftar hutang per jatuh tempo | Selesai |
-| 8 | Produksi (Production Order, pemakaian bahan aktual, varians, QC hasil) | Berikutnya |
-| 9 | Laporan dan dashboard Owner | Belum dimulai |
+| 8 | Produksi: Production Order dua langkah (rencana → selesai), dibuat dari permintaan stok yang kurang atau tanpa permintaan; bahan kurang langsung jadi PR terisi; selesai dengan hasil baik/gagal per alasan (QC Production), pemakaian bahan sebenarnya, harga pokok hasil dari bahan terpakai, batch = nomor produksi dengan kedaluwarsa dari umur simpan; toleransi varians diatur Owner | Selesai |
+| 9 | Laporan dan dashboard Owner | Berikutnya |
