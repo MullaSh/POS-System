@@ -93,5 +93,6 @@ menyentuh kode).
 | 4 | Stok: saldo awal + harga pokok, kartu stok, batch gudang, waste, stock opname (disetujui Owner), permintaan stok, kirim/terima/retur dengan penjelasan selisih | Selesai |
 | 5 | POS: shift dengan Cash Float dan tutup shift hitung buta, transaksi dengan stok outlet dipotong per resep dan HPP terkunci, bayar campur, struk dari browser, void/refund dengan persetujuan Owner, delegasi persetujuan | Selesai |
 | 6 | Kas: ringkasan tiga dana per outlet, serah terima Outlet → Gudang → Finance dengan konfirmasi dan bukti selisih, Petty Cash dan biaya (isi ulang sebesar biaya terbukti), pencocokan non-tunai harian, keputusan selisih oleh Finance | Selesai |
-| 7 | Pembelian lengkap dan hutang supplier | Berikutnya |
-| 8–9 | Produksi, laporan dan dashboard Owner | Belum dimulai |
+| 7 | Pembelian: Purchase Request gudang (disetujui Finance), Purchase Order oleh Finance (di atas batas disetujui Owner; gudang tidak melihat harga), penerimaan bertahap dengan QC Incoming, tagihan per penerimaan dengan alasan bila beda harga, pembayaran sebagian dan daftar hutang per jatuh tempo | Selesai |
+| 8 | Produksi (Production Order, pemakaian bahan aktual, varians, QC hasil) | Berikutnya |
+| 9 | Laporan dan dashboard Owner | Belum dimulai |
