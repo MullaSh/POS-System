@@ -113,6 +113,8 @@ jobs:
           get sales | grep -q 'TRX-'
           get 'shifts?status=RUNNING' | grep -q '"status":"OPEN"'
           get delegations | grep -q '"status":"ACTIVE"'
+          get cash/overview | grep -q '"petty_cash":175000'
+          get cash/expenses | grep -q 'BYA-'
           echo "Login dan data contoh berfungsi"
       - name: Ambil screenshot layar
         run: |

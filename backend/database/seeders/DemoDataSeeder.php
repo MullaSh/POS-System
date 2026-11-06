@@ -20,6 +20,9 @@ use App\Modules\Catalog\Models\PaymentMethod;
 use App\Modules\Catalog\Models\Unit;
 use App\Modules\Approval\Services\DelegationService;
 use App\Modules\Sales\Models\Sale;
+use App\Modules\Cash\Models\Expense;
+use App\Modules\Cash\Services\PettyCashService;
+use App\Modules\Catalog\Models\ExpenseCategory as DemoExpenseCategory;
 use App\Modules\Sales\Services\RefundService;
 use App\Modules\Sales\Services\SaleService;
 use App\Modules\Sales\Services\ShiftService;
@@ -54,6 +57,9 @@ class DemoDataSeeder extends Seeder
         }
         if (! Sale::query()->exists()) {
             $this->seedSales();
+        }
+        if (! Expense::query()->exists()) {
+            $this->seedCash();
         }
     }
 
@@ -303,6 +309,38 @@ class DemoDataSeeder extends Seeder
                 'delegator_role' => Role::OWNER, 'delegate_id' => $finance->id, 'types' => ['SALE_REFUND'],
                 'ends_at' => now()->addDays(7)->toIso8601String(), 'reason' => 'Contoh delegasi',
             ], $owner);
+        });
+    }
+
+    /**
+     * Irisan 6: saldo tetap Petty Cash Rp200.000 per outlet (angka contoh; diisi Owner sebelum go-live),
+     * isi awal Petty Cash Outlet 1 oleh Finance, satu biaya outlet yang menunggu diperiksa Finance,
+     * dan satu biaya gudang yang dibayar Finance.
+     */
+    private function seedCash(): void
+    {
+        $owner = User::query()->where('username', 'owner')->firstOrFail();
+        $finance = User::query()->where('username', 'finance1')->first();
+        $kasir1 = User::query()->where('username', 'kasir1')->first();
+        $outlet1 = Location::query()->where('code', 'OTL01')->first();
+        $warehouse = Location::query()->where('type', Location::TYPE_WAREHOUSE)->first();
+        $gas = DemoExpenseCategory::query()->where('code', 'GAS')->first() ?? DemoExpenseCategory::query()->first();
+        if (! $finance || ! $kasir1 || ! $outlet1 || ! $warehouse || ! $gas) {
+            return;
+        }
+        $petty = app(PettyCashService::class);
+
+        DB::transaction(function () use ($petty, $owner, $finance, $kasir1, $outlet1, $warehouse, $gas) {
+            foreach (Location::query()->where('type', Location::TYPE_OUTLET)->where('status', Location::STATUS_ACTIVE)->get() as $outlet) {
+                if ($outlet->petty_cash_amount === null) {
+                    $petty->setTarget($outlet, 200000, $owner);
+                }
+            }
+            $petty->refill($outlet1->fresh(), [], 'Isi awal contoh', $finance);
+            $petty->recordExpense(['location_id' => $outlet1->id, 'expense_category_id' => $gas->id, 'amount' => 25000,
+                'description' => 'Contoh: isi ulang gas kompor', 'evidence_note' => 'Nota warung no. 17'], $kasir1);
+            $petty->recordExpense(['location_id' => $warehouse->id, 'expense_category_id' => $gas->id, 'amount' => 150000,
+                'description' => 'Contoh: gas untuk produksi gudang'], $finance);
         });
     }
 }

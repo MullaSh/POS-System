@@ -36,11 +36,16 @@ await session('owner', [
   ['penjualan-detail', '/penjualan', 'tbody a'],
   ['shift', '/shift'],
   ['delegasi', '/delegasi'],
+  ['selisih', '/kas/selisih'],
 ])
 await session('finance1', [
   ['persetujuan', '/persetujuan'],
+  ['kas', '/kas'],
+  ['petty-cash', '/kas', 'a[href^="/kas/petty-cash"]'],
+  ['rekonsiliasi', '/kas/rekonsiliasi'],
 ])
 await session('gudang1', [
+  ['kas', '/kas'],
   ['permintaan', '/permintaan-stok'],
   ['permintaan-detail', '/permintaan-stok', 'tbody a'],
   ['pengiriman-baru', '/pengiriman/baru?jenis=DISTRIBUTION'],
@@ -49,6 +54,8 @@ await session('kasir1', [
   ['kasir', '/kasir'],
   ['shift-tutup', '/shift', 'tbody a'],
   ['penjualan', '/penjualan'],
+  ['biaya', '/kas/biaya'],
+  ['serah-terima-baru', '/kas/serah-terima/baru'],
   ['stok-outlet', '/stok'],
   ['opname-baru', '/stok/opname/baru'],
   ['waste-baru', '/stok/waste/baru'],

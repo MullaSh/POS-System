@@ -154,6 +154,15 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   SALE_REFUND_APPLIED: 'Void/refund berlaku',
   DELEGATION_CREATED: 'Delegasi dibuat',
   DELEGATION_REVOKED: 'Delegasi dicabut',
+  CASH_HANDOVER_SENT: 'Kas diserahkan',
+  CASH_HANDOVER_RECEIVED: 'Kas diterima',
+  EXPENSE_RECORDED: 'Biaya dicatat',
+  EXPENSE_CANCELLED: 'Biaya dibatalkan',
+  PETTY_CASH_TARGET_SET: 'Saldo tetap Petty Cash diatur',
+  PETTY_CASH_REFILL_REQUESTED: 'Isi ulang Petty Cash diminta',
+  PETTY_CASH_REFILLED: 'Petty Cash diisi ulang',
+  NONCASH_RECONCILED: 'Non-tunai dicocokkan',
+  DISCREPANCY_RESOLVED: 'Selisih diputuskan',
 }
 
 export function auditActionLabel(action: string): string {
@@ -264,4 +273,22 @@ export const DELEGATION_STATUS_LABEL: Record<DelegationStatus, string> = {
 export function formatSignedRupiah(value: number | null | undefined): string {
   if (value === null || value === undefined) return '–'
   return value > 0 ? `+${formatRupiah(value)}` : formatRupiah(value)
+}
+
+export const EXPENSE_STATUS_LABEL: Record<string, string> = {
+  RECORDED: 'Menunggu diperiksa Finance',
+  VERIFIED: 'Terbukti',
+  REJECTED: 'Ditolak',
+  CANCELLED: 'Dibatalkan',
+}
+
+export const HANDOVER_STAGE_LABEL: Record<string, string> = {
+  OUTLET_TO_WAREHOUSE: 'Outlet → Gudang',
+  WAREHOUSE_TO_FINANCE: 'Gudang → Finance',
+}
+
+export const PETTY_MOVEMENT_LABEL: Record<string, string> = {
+  REFILL: 'Isi ulang dari Finance',
+  EXPENSE: 'Biaya',
+  EXPENSE_CANCEL: 'Biaya dibatalkan',
 }

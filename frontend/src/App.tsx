@@ -21,6 +21,7 @@ import { StockPage } from '@/features/stock/StockPage'
 import { TransferDetailPage, TransferFormPage, TransfersPage } from '@/features/stock/TransferPages'
 import { SuppliersPage } from '@/features/suppliers/SuppliersPage'
 import { UsersPage } from '@/features/users/UsersPage'
+import { CashOverviewPage, DiscrepanciesPage, ExpensesPage, HandoverDetailPage, HandoverFormPage, HandoversPage, PettyCashPage, ReconciliationPage } from '@/features/cash/CashPages'
 import { DelegationsPage } from '@/features/delegations/DelegationsPage'
 import { PosPage } from '@/features/pos/PosPage'
 import { ShiftDetailPage, ShiftsPage } from '@/features/pos/ShiftPages'
@@ -59,6 +60,14 @@ export default function App() {
         <Route path="penjualan/:id" element={<RequireAuth role={['CASHIER', 'OWNER', 'FINANCE']}><SaleDetailPage /></RequireAuth>} />
         <Route path="shift" element={<RequireAuth role={['CASHIER', 'OWNER', 'FINANCE']}><ShiftsPage /></RequireAuth>} />
         <Route path="shift/:id" element={<RequireAuth role={['CASHIER', 'OWNER', 'FINANCE']}><ShiftDetailPage /></RequireAuth>} />
+        <Route path="kas" element={<CashOverviewPage />} />
+        <Route path="kas/serah-terima" element={<HandoversPage />} />
+        <Route path="kas/serah-terima/baru" element={<HandoverFormPage />} />
+        <Route path="kas/serah-terima/:id" element={<HandoverDetailPage />} />
+        <Route path="kas/biaya" element={<RequireAuth role={['OWNER', 'FINANCE', 'CASHIER']}><ExpensesPage /></RequireAuth>} />
+        <Route path="kas/petty-cash/:id" element={<PettyCashPage />} />
+        <Route path="kas/rekonsiliasi" element={<RequireAuth role={['OWNER', 'FINANCE']}><ReconciliationPage /></RequireAuth>} />
+        <Route path="kas/selisih" element={<RequireAuth role={['OWNER', 'FINANCE']}><DiscrepanciesPage /></RequireAuth>} />
         <Route path="delegasi" element={<RequireAuth role={['OWNER', 'FINANCE']}><DelegationsPage /></RequireAuth>} />
         <Route path="supplier" element={<RequireAuth role={['OWNER', 'FINANCE']}><SuppliersPage /></RequireAuth>} />
         <Route path="metode-bayar" element={<RequireAuth role="OWNER"><PaymentMethodsPage /></RequireAuth>} />

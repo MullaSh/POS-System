@@ -36,7 +36,7 @@ export function AppLayout() {
                   <li key={i.to}>
                     <NavLink
                       to={i.to}
-                      end={i.to === '/'}
+                      end={i.to === '/' || i.to === '/kas'}
                       className={({ isActive }) =>
                         cn(
                           'flex items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-muted',

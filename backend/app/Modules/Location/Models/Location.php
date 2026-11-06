@@ -23,13 +23,14 @@ class Location extends Model
     public const STATUS_INACTIVE = 'INACTIVE';
     public const STATUS_CLOSED = 'CLOSED';
 
-    protected $fillable = ['code', 'name', 'type', 'status', 'opened_at', 'closed_at'];
+    protected $fillable = ['code', 'name', 'type', 'status', 'opened_at', 'closed_at', 'petty_cash_amount'];
 
     protected function casts(): array
     {
         return [
             'opened_at' => 'datetime',
             'closed_at' => 'datetime',
+            'petty_cash_amount' => 'integer',
         ];
     }
 

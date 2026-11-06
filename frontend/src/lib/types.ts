@@ -531,3 +531,109 @@ export type DelegationOptions = {
   users: PersonRef[]
   max_days: number
 }
+
+// --- Kas (irisan 6) ---
+
+export type HandoverStage = 'OUTLET_TO_WAREHOUSE' | 'WAREHOUSE_TO_FINANCE'
+type LocRef = { id: number; code: string; name: string; type?: LocationType }
+
+export type CashHandover = {
+  id: number
+  number: string
+  stage: HandoverStage
+  status: 'SENT' | 'RECEIVED'
+  from: LocRef
+  to: LocRef | null
+  expected_amount: number
+  reported_amount: number
+  received_amount: number | null
+  difference: number | null
+  sender: PersonRef | null
+  sent_at: string
+  sender_note: string | null
+  receiver: PersonRef | null
+  received_at: string | null
+  receiver_note: string | null
+  evidence_note: string | null
+  items: { amount: number; shift: { id: number; number: string; cashier: string | null; closed_at: string } | null; source: { id: number; number: string; from: string | null } | null }[] | null
+  can: { receive: boolean }
+}
+
+export type HandoverPending = {
+  location: LocRef
+  can_send: boolean
+  shifts: { id: number; number: string; cashier: { id: number; name: string } | null; closed_at: string; sales_cash: number }[]
+  handovers: { id: number; number: string; from: { id: number; name: string } | null; received_at: string; received_amount: number }[]
+  total: number
+}
+
+export type CashOverview = {
+  outlets: {
+    location: LocRef
+    cash_float: number | null
+    cash_float_target: number
+    shift_running: boolean
+    sales_cash_at_outlet: number
+    shifts_to_hand_over: number
+    sales_cash_in_transit: number
+    petty_cash: number
+    petty_cash_target: number | null
+    expenses_to_check: number
+    refill_requested: boolean
+  }[]
+  warehouse: { location: LocRef; incoming: number; at_warehouse: number; to_finance: number } | null
+  sees_all: boolean
+  open_discrepancies: number | null
+}
+
+export type ExpenseStatus = 'RECORDED' | 'VERIFIED' | 'REJECTED' | 'CANCELLED'
+
+export type Expense = {
+  id: number
+  number: string
+  location: LocRef
+  category: { id: number; code: string; name: string }
+  amount: number
+  description: string
+  evidence_note: string | null
+  paid_from: 'PETTY_CASH' | 'FINANCE'
+  status: ExpenseStatus
+  business_date: string
+  recorded_by: PersonRef | null
+  created_at: string
+  decided_by: PersonRef | null
+  decided_at: string | null
+  decision_note: string | null
+  can: { cancel: boolean }
+}
+
+export type PettyCash = {
+  location: LocRef
+  target: number | null
+  balance: number
+  pending: Expense[]
+  request: { id: number; number: string; by: string | null; at: string; note: string | null } | null
+  movements: { id: number; type: 'REFILL' | 'EXPENSE' | 'EXPENSE_CANCEL'; amount: number; balance_after: number; source: { type: string; id: number; number: string }; user: string | null; created_at: string }[]
+  can: { record: boolean; request: boolean; refill: boolean; set_target: boolean }
+}
+
+export type ReconciliationRow = {
+  business_date: string
+  method: { id: number; code: string; name: string }
+  system_amount: number
+  reconciliation: { id: number; bank_amount: number; difference: number; note: string | null; by: string | null; at: string } | null
+}
+
+export type Discrepancy = {
+  subject_type: 'cashier_shift' | 'cash_handover' | 'expense' | 'noncash_reconciliation'
+  subject_id: number
+  number: string
+  kind: string
+  location: string | null
+  person: string | null
+  amount: number
+  explanation: string | null
+  at: string
+  link: string
+  resolution: { decision: string; by: string | null; at: string } | null
+}
