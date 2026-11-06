@@ -3,6 +3,9 @@
 namespace App\Modules\Approval\Services;
 
 use App\Modules\Approval\Contracts\ApprovalHandler;
+use App\Modules\Approval\Contracts\ReactsToClosing;
+use App\Modules\Purchasing\Approvals\PurchaseOrderApproval;
+use App\Modules\Purchasing\Approvals\PurchaseRequestApproval;
 use App\Modules\Approval\Models\ApprovalEvent;
 use App\Modules\Approval\Models\ApprovalRequest;
 use App\Modules\Audit\Services\AuditLogger;
@@ -34,10 +37,12 @@ class ApprovalService
         ApprovalRequest::TYPE_ITEM_PRICE => ItemPriceApproval::class,
         ApprovalRequest::TYPE_STOCK_COUNT => StockCountApproval::class,
         ApprovalRequest::TYPE_SALE_REFUND => SaleRefundApproval::class,
+        ApprovalRequest::TYPE_PURCHASE_REQUEST => PurchaseRequestApproval::class,
+        ApprovalRequest::TYPE_PURCHASE_ORDER => PurchaseOrderApproval::class,
     ];
 
     /** @var list<string> */
-    public const TYPES = [ApprovalRequest::TYPE_ITEM_PRICE, ApprovalRequest::TYPE_STOCK_COUNT, ApprovalRequest::TYPE_SALE_REFUND];
+    public const TYPES = [ApprovalRequest::TYPE_ITEM_PRICE, ApprovalRequest::TYPE_STOCK_COUNT, ApprovalRequest::TYPE_SALE_REFUND, ApprovalRequest::TYPE_PURCHASE_REQUEST, ApprovalRequest::TYPE_PURCHASE_ORDER];
 
     public function __construct(private readonly AuditLogger $audit) {}
 
@@ -139,6 +144,10 @@ class ApprovalService
             $this->event($request, ApprovalEvent::CANCELLED, $requester, $note);
             $this->audit->record('APPROVAL_CANCELLED', $request, null, $request->requesterRole->code, $note,
                 related: $this->related($request), user: $requester, subjectCode: $request->number);
+            $handler = $this->handler($request->type);
+            if ($handler instanceof ReactsToClosing) {
+                $handler->closed($request);
+            }
 
             return $request;
         });
@@ -178,6 +187,8 @@ class ApprovalService
 
             if ($status === ApprovalRequest::STATUS_APPROVED) {
                 $handler->apply($request, $approver);
+            } elseif ($status === ApprovalRequest::STATUS_REJECTED && $handler instanceof ReactsToClosing) {
+                $handler->closed($request);
             }
 
             return $request;

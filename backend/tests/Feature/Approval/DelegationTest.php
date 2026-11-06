@@ -69,14 +69,15 @@ class DelegationTest extends TestCase
 
         $this->getJson('/api/v1/delegations/options')->assertOk()
             ->assertJsonPath('data.roles.0.code', 'OWNER')
-            ->assertJsonPath('data.roles.0.types', ['ITEM_PRICE', 'STOCK_COUNT', 'SALE_REFUND']);
+            ->assertJsonPath('data.roles.0.types', ['ITEM_PRICE', 'STOCK_COUNT', 'SALE_REFUND', 'PURCHASE_ORDER']);
 
         $id = $this->delegate($this->finance, ['ITEM_PRICE'])->assertCreated()->assertJsonPath('data.status', 'ACTIVE')->json('data.id');
 
         // Pengajuan dari finance2: penerima delegasi (finance) dapat memutuskannya.
         $request = $this->priceRequest($this->finance2);
         Sanctum::actingAs($this->finance);
-        $this->getJson('/api/v1/auth/me')->assertJsonPath('user.approval_types', ['ITEM_PRICE']);
+        // Finance sendiri memutuskan Purchase Request (irisan 7); ITEM_PRICE datang dari delegasi.
+        $this->getJson('/api/v1/auth/me')->assertJsonPath('user.approval_types', ['ITEM_PRICE', 'PURCHASE_REQUEST']);
         $this->getJson('/api/v1/approvals/summary')->assertJsonPath('data.waiting_my_decision', 1);
         $this->getJson('/api/v1/approvals?status=OPEN')->assertOk()->assertJsonPath('data.0.can.decide', true);
         $this->postJson("/api/v1/approvals/{$request->id}/approve", ['note' => 'Disetujui atas delegasi'])->assertOk()
@@ -132,9 +133,9 @@ class DelegationTest extends TestCase
     public function test_delegation_ends_when_delegator_loses_the_role(): void
     {
         Sanctum::actingAs($this->finance);
-        // Finance belum memutuskan jenis persetujuan apa pun di MVP saat ini.
+        // Finance hanya memutuskan Purchase Request; harga menu tetap milik Owner.
         $this->postJson('/api/v1/delegations', ['delegator_role' => Role::FINANCE, 'delegate_id' => $this->kasir->id, 'types' => ['ITEM_PRICE'], 'ends_at' => '2026-11-08T18:00:00+07:00'])
-            ->assertUnprocessable()->assertJsonValidationErrors('types');
+            ->assertUnprocessable()->assertJsonValidationErrors('types.0');
         $this->postJson('/api/v1/delegations', ['delegator_role' => Role::OWNER, 'delegate_id' => $this->kasir->id, 'types' => ['ITEM_PRICE'], 'ends_at' => '2026-11-08T18:00:00+07:00'])
             ->assertForbidden();
 

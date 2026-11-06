@@ -37,6 +37,8 @@ class ApprovalRequest extends Model
     public const TYPE_ITEM_PRICE = 'ITEM_PRICE';
     public const TYPE_STOCK_COUNT = 'STOCK_COUNT';
     public const TYPE_SALE_REFUND = 'SALE_REFUND';
+    public const TYPE_PURCHASE_REQUEST = 'PURCHASE_REQUEST';
+    public const TYPE_PURCHASE_ORDER = 'PURCHASE_ORDER';
 
     protected $fillable = [
         'number', 'type', 'status', 'subject_type', 'subject_id', 'payload', 'reason',

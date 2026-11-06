@@ -21,6 +21,8 @@ use App\Modules\Catalog\Models\Unit;
 use App\Modules\Approval\Services\DelegationService;
 use App\Modules\Sales\Models\Sale;
 use App\Modules\Cash\Models\Expense;
+use App\Modules\Purchasing\Models\PurchaseRequest;
+use App\Modules\Purchasing\Services\PurchaseService;
 use App\Modules\Cash\Services\PettyCashService;
 use App\Modules\Catalog\Models\ExpenseCategory as DemoExpenseCategory;
 use App\Modules\Sales\Services\RefundService;
@@ -60,6 +62,9 @@ class DemoDataSeeder extends Seeder
         }
         if (! Expense::query()->exists()) {
             $this->seedCash();
+        }
+        if (! PurchaseRequest::query()->exists()) {
+            $this->seedPurchasing();
         }
     }
 
@@ -341,6 +346,40 @@ class DemoDataSeeder extends Seeder
                 'description' => 'Contoh: isi ulang gas kompor', 'evidence_note' => 'Nota warung no. 17'], $kasir1);
             $petty->recordExpense(['location_id' => $warehouse->id, 'expense_category_id' => $gas->id, 'amount' => 150000,
                 'description' => 'Contoh: gas untuk produksi gudang'], $finance);
+        });
+    }
+
+    /**
+     * Irisan 7: satu PR menunggu Finance, dan satu PR yang sudah dipesan (PO di bawah batas)
+     * menunggu barang diterima gudang1. Harga contoh, bukan harga supplier sebenarnya.
+     */
+    private function seedPurchasing(): void
+    {
+        $owner = User::query()->where('username', 'owner')->firstOrFail();
+        $finance = User::query()->where('username', 'finance1')->first();
+        $gudang = User::query()->where('username', 'gudang1')->first();
+        $supplier = Supplier::query()->where('code', 'SUP-AYAM')->first();
+        $ayam = Item::query()->where('code', 'BB-AYAM')->first();
+        $tepung = Item::query()->where('code', 'BB-TEPUNG')->first();
+        $kg = Unit::query()->where('code', 'kg')->value('id');
+        if (! $finance || ! $gudang || ! $supplier || ! $ayam || ! $tepung || ! $kg) {
+            return;
+        }
+        $purchases = app(PurchaseService::class);
+
+        DB::transaction(function () use ($purchases, $owner, $finance, $gudang, $supplier, $ayam, $tepung, $kg) {
+            if (! \App\Modules\System\Models\AppSetting::query()->whereKey(\App\Modules\System\Models\AppSetting::PURCHASE_FINANCE_LIMIT)->exists()) {
+                $purchases->setFinanceLimit(PurchaseService::DEFAULT_FINANCE_LIMIT, $owner);
+            }
+            $ordered = $purchases->createRequest(['reason' => 'Contoh: stok ayam untuk produksi minggu depan', 'needed_by' => now()->addDays(2)->toDateString(),
+                'lines' => [['item_id' => $ayam->id, 'unit_id' => $kg, 'qty' => 5]]], $gudang);
+            app(ApprovalService::class)->approve(ApprovalRequest::query()->findOrFail($ordered->approval_request_id), $finance, 'Contoh persetujuan');
+            $line = $ordered->fresh()->lines()->firstOrFail();
+            $purchases->createOrder(['purchase_request_id' => $ordered->id, 'supplier_id' => $supplier->id, 'expected_date' => now()->addDay()->toDateString(),
+                'note' => 'Contoh PO', 'lines' => [['purchase_line_id' => $line->id, 'qty' => 5, 'unit_price' => 58000]]], $finance);
+
+            $purchases->createRequest(['reason' => 'Contoh: tepung untuk kulit dimsum',
+                'lines' => [['item_id' => $tepung->id, 'unit_id' => $kg, 'qty' => 10]]], $gudang);
         });
     }
 }
