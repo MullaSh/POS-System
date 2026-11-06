@@ -53,9 +53,9 @@ class DelegationTest extends TestCase
         ]);
     }
 
-    private function priceRequest(User $by): ApprovalRequest
+    private function priceRequest(User $by, int $price = 20000): ApprovalRequest
     {
-        return app(ApprovalService::class)->submit(ApprovalRequest::TYPE_ITEM_PRICE, $this->menu, ['price' => 20000], 'Harga baru', $by, Role::FINANCE);
+        return app(ApprovalService::class)->submit(ApprovalRequest::TYPE_ITEM_PRICE, $this->menu, ['price' => $price], 'Harga baru', $by, Role::FINANCE);
     }
 
     public function test_owner_delegates_selected_types_for_a_period_and_delegate_decides_with_flag(): void
@@ -89,7 +89,7 @@ class DelegationTest extends TestCase
         $this->assertSame($id, ApprovalRequest::query()->find($request->id)->delegation_id);
 
         // Penerima tetap tidak boleh memutuskan pengajuannya sendiri.
-        $own = $this->priceRequest($this->finance);
+        $own = $this->priceRequest($this->finance, 21000);
         $this->postJson("/api/v1/approvals/{$own->id}/approve")->assertForbidden();
         // Jenis yang tidak didelegasikan tidak bisa diputuskan.
         $this->assertFalse(in_array('STOCK_COUNT', $this->getJson('/api/v1/auth/me')->json('user.approval_types'), true));

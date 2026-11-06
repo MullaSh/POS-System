@@ -44,7 +44,7 @@ class ApprovalController
             ->orderByDesc('id');
 
         $page = $query->paginate(50);
-        $page->getCollection()->transform(fn (ApprovalRequest $r) => $this->present($r, $user));
+        $page->getCollection()->transform(fn (ApprovalRequest $r) => $this->present($r, $user, types: $types));
 
         return response()->json($page);
     }
@@ -115,7 +115,8 @@ class ApprovalController
     }
 
     /** @return array<string, mixed> */
-    public function present(ApprovalRequest $r, User $viewer, bool $withEvents = false): array
+    /** @param  list<string>|null  $types */
+    public function present(ApprovalRequest $r, User $viewer, bool $withEvents = false, ?array $types = null): array
     {
         $r->loadMissing(['requester:id,name,username', 'requesterRole:id,code,name', 'decider:id,name,username', 'delegation.delegator:id,name']);
         $handler = $this->approvals->handler($r->type);
@@ -138,7 +139,7 @@ class ApprovalController
             'decision_note' => $r->decision_note,
             'delegation' => $r->delegation ? ['number' => $r->delegation->number, 'delegator' => $r->delegation->delegator?->only(['id', 'name'])] : null,
             'can' => [
-                'decide' => $this->delegations->canDecide($viewer, $r),
+                'decide' => $this->delegations->canDecide($viewer, $r, $types),
                 'resubmit' => $r->status === ApprovalRequest::STATUS_RETURNED && $isRequester,
                 'cancel' => $r->isOpen() && $isRequester,
             ],

@@ -27,4 +27,9 @@ class SaleRefundPayment extends Model
     {
         return $this->belongsTo(PaymentMethod::class, 'payment_method_id');
     }
+
+    public function refund(): BelongsTo
+    {
+        return $this->belongsTo(SaleRefund::class, 'sale_refund_id');
+    }
 }

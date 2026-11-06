@@ -22,9 +22,6 @@ use Illuminate\Validation\ValidationException;
  */
 class DelegationService
 {
-    /** @var array<int, list<string>> */
-    private array $decidable = [];
-
     public function __construct(private readonly AuditLogger $audit) {}
 
     /** @return array<string, mixed> */
@@ -159,9 +156,6 @@ class DelegationService
      */
     public function decidableTypes(User $user): array
     {
-        if (isset($this->decidable[$user->id])) {
-            return $this->decidable[$user->id];
-        }
         $service = app(ApprovalService::class);
         $types = [];
         foreach (ApprovalService::TYPES as $type) {
@@ -171,14 +165,15 @@ class DelegationService
             }
         }
 
-        return $this->decidable[$user->id] = $types;
+        return $types;
     }
 
     /** Bisakah user ini memutuskan pengajuan ini sekarang? */
-    public function canDecide(User $user, ApprovalRequest $request): bool
+    /** @param  list<string>|null  $types  Hasil decidableTypes yang sudah dihitung, bila ada */
+    public function canDecide(User $user, ApprovalRequest $request, ?array $types = null): bool
     {
         return $request->status === ApprovalRequest::STATUS_PENDING
             && $request->requested_by !== $user->id
-            && in_array($request->type, $this->decidableTypes($user), true);
+            && in_array($request->type, $types ?? $this->decidableTypes($user), true);
     }
 }
