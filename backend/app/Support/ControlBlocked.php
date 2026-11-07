@@ -13,8 +13,8 @@ use Throwable;
  * Percobaannya dicatat di jejak audit sebagai CONTROL_BLOCKED (3A-Q1: pencatatan Confirmed (Owner))
  * dan tampil di daftar pengawasan beranda Owner (irisan 9, butir 7).
  *
- * Pencatatan terjadi saat respons dibuat (bootstrap/app.php), setelah transaksi tindakan yang
- * ditolak dibatalkan, sehingga catatannya tidak ikut terhapus.
+ * Pencatatan terjadi di render(), saat respons dibuat dan setelah transaksi tindakan yang ditolak
+ * dibatalkan, sehingga catatannya tidak ikut terhapus.
  */
 class ControlBlocked extends AuthorizationException
 {
@@ -31,6 +31,14 @@ class ControlBlocked extends AuthorizationException
         public readonly ?int $locationId = null,
     ) {
         parent::__construct($message);
+    }
+
+    /** Dipanggil Laravel sebelum exception diubah menjadi jawaban 403; false = lanjut ke jawaban biasa. */
+    public function render(): bool
+    {
+        $this->record();
+
+        return false;
     }
 
     public function record(): void
