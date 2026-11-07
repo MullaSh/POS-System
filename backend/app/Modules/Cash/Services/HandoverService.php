@@ -10,6 +10,7 @@ use App\Modules\Identity\Models\User;
 use App\Modules\Location\Models\Location;
 use App\Modules\Sales\Models\CashierShift;
 use App\Support\DocumentNumber;
+use App\Support\ControlBlocked;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -151,7 +152,7 @@ class HandoverService
                 throw ValidationException::withMessages(['status' => 'Serah terima ini sudah dikonfirmasi.']);
             }
             if ($handover->sender_id === $user->id) {
-                throw new AuthorizationException('Pengirim dan penerima kas harus orang yang berbeda.');
+                throw new ControlBlocked('Pengirim dan penerima kas harus orang yang berbeda.', ControlBlocked::SAME_SENDER_RECEIVER, $handover);
             }
             $received = (int) $data['received_amount'];
             $differs = $received !== $handover->expected_amount || $received !== $handover->reported_amount;

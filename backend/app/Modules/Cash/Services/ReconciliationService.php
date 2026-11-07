@@ -15,6 +15,7 @@ use App\Modules\Sales\Models\SalePayment;
 use App\Modules\Sales\Models\SaleRefundPayment;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -34,6 +35,9 @@ class ReconciliationService
         'expense' => Expense::class,
         'noncash_reconciliation' => NoncashReconciliation::class,
     ];
+
+    /** Kategori keputusan selisih (irisan 9): menentukan dampak ke laba bersih. */
+    public const CATEGORIES = ['STAFF', 'BUSINESS', 'RECORDING_ERROR'];
 
     public function __construct(private readonly AuditLogger $audit) {}
 
@@ -99,7 +103,7 @@ class ReconciliationService
         }
     }
 
-    public function resolve(string $subjectType, int $subjectId, string $decision, User $user): DiscrepancyResolution
+    public function resolve(string $subjectType, int $subjectId, string $decision, User $user, string $category): DiscrepancyResolution
     {
         if (! $user->hasActiveRole(Role::FINANCE)) {
             throw new AuthorizationException('Penyelesaian selisih diputuskan Finance.');
@@ -109,19 +113,57 @@ class ReconciliationService
         if (! $this->hasDifference($subjectType, $subject)) {
             throw ValidationException::withMessages(['subject_id' => 'Catatan ini tidak berselisih.']);
         }
+        if (! in_array($category, self::CATEGORIES, true)) {
+            throw ValidationException::withMessages(['category' => 'Pilih jenis penyelesaian selisih.']);
+        }
         if (DiscrepancyResolution::query()->where(['subject_type' => $subjectType, 'subject_id' => $subjectId])->exists()) {
             throw ValidationException::withMessages(['subject_id' => 'Selisih ini sudah diputuskan.']);
         }
 
-        return DB::transaction(function () use ($subjectType, $subject, $decision, $user) {
+        return DB::transaction(function () use ($subjectType, $subject, $decision, $user, $category) {
             $res = DiscrepancyResolution::query()->create([
-                'subject_type' => $subjectType, 'subject_id' => $subject->getKey(), 'decision' => $decision, 'decided_by' => $user->id,
+                'subject_type' => $subjectType, 'subject_id' => $subject->getKey(), 'decision' => $decision, 'decided_by' => $user->id, 'category' => $category,
             ]);
-            $this->audit->record('DISCREPANCY_RESOLVED', $subject, ['jenis' => $subjectType, 'jumlah' => $this->amount($subjectType, $subject)],
+            $this->audit->record('DISCREPANCY_RESOLVED', $subject, ['jenis' => $subjectType, 'jumlah' => $this->amount($subjectType, $subject), 'kategori' => $category],
                 Role::FINANCE, $decision, user: $user, subjectCode: $subject->getAttribute('number'));
 
             return $res;
         });
+    }
+
+    /** Semua selisih kas dengan keputusannya, terbaru dulu (KP-12). @return list<array<string, mixed>> */
+    public function discrepancies(): array
+    {
+        $resolutions = DiscrepancyResolution::query()->with('decider:id,name')->get()->keyBy(fn ($r) => "{$r->subject_type}|{$r->subject_id}");
+        $res = fn (string $type, int $id) => ($r = $resolutions->get("{$type}|{$id}"))
+            ? ['decision' => $r->decision, 'category' => $r->category, 'by' => $r->decider?->name, 'at' => $r->created_at] : null;
+        $rows = [];
+
+        foreach (CashierShift::query()->with(['location', 'cashier:id,name'])->where('status', CashierShift::STATUS_CLOSED)->where('cash_difference', '<>', 0)->orderByDesc('closed_at')->limit(300)->get() as $s) {
+            $rows[] = ['subject_type' => 'cashier_shift', 'subject_id' => $s->id, 'number' => $s->number, 'kind' => 'Tutup shift',
+                'location' => $s->location?->name, 'person' => $s->cashier?->name, 'amount' => (int) $s->cash_difference,
+                'explanation' => $s->close_note, 'at' => $s->closed_at, 'link' => "/shift/{$s->id}", 'resolution' => $res('cashier_shift', $s->id)];
+        }
+        foreach (CashHandover::query()->with(['fromLocation', 'receiver:id,name'])->where('status', CashHandover::STATUS_RECEIVED)->whereColumn('received_amount', '<>', 'expected_amount')->orderByDesc('received_at')->limit(300)->get() as $h) {
+            $rows[] = ['subject_type' => 'cash_handover', 'subject_id' => $h->id, 'number' => $h->number,
+                'kind' => $h->stage === CashHandover::STAGE_OUTLET ? 'Serah terima outlet → gudang' : 'Serah terima gudang → Finance',
+                'location' => $h->fromLocation?->name, 'person' => $h->receiver?->name, 'amount' => (int) $h->difference(),
+                'explanation' => trim(($h->sender_note ? "Pengirim: {$h->sender_note}. " : '').($h->evidence_note ? "Penerima: {$h->evidence_note}" : '')),
+                'at' => $h->received_at, 'link' => "/kas/serah-terima/{$h->id}", 'resolution' => $res('cash_handover', $h->id)];
+        }
+        foreach (Expense::query()->with(['location', 'recorder:id,name'])->where('status', Expense::STATUS_REJECTED)->orderByDesc('decided_at')->limit(300)->get() as $e) {
+            $rows[] = ['subject_type' => 'expense', 'subject_id' => $e->id, 'number' => $e->number, 'kind' => 'Biaya Petty Cash ditolak',
+                'location' => $e->location?->name, 'person' => $e->recorder?->name, 'amount' => -$e->amount,
+                'explanation' => "{$e->description}. Alasan ditolak: {$e->decision_note}", 'at' => $e->decided_at, 'link' => '/kas/biaya', 'resolution' => $res('expense', $e->id)];
+        }
+        foreach (NoncashReconciliation::query()->with('method')->where('difference', '<>', 0)->orderByDesc('business_date')->limit(300)->get() as $n) {
+            $rows[] = ['subject_type' => 'noncash_reconciliation', 'subject_id' => $n->id, 'number' => ($n->method?->name ?? '').' '.$n->business_date->format('d/m/Y'),
+                'kind' => 'Pencocokan non-tunai', 'location' => 'Rekening pusat', 'person' => null, 'amount' => (int) $n->difference,
+                'explanation' => $n->note, 'at' => $n->created_at, 'link' => '/kas/rekonsiliasi', 'resolution' => $res('noncash_reconciliation', $n->id)];
+        }
+        usort($rows, fn ($a, $b) => Carbon::parse($b['at'])->timestamp <=> Carbon::parse($a['at'])->timestamp);
+
+        return $rows;
     }
 
     public function hasDifference(string $type, mixed $subject): bool

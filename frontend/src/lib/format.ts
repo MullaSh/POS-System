@@ -89,6 +89,7 @@ export const LOCATION_STATUS_LABEL: Record<LocationStatus, string> = {
 }
 
 export const AUDIT_ACTION_LABEL: Record<string, string> = {
+  CONTROL_BLOCKED: 'Ditolak kontrol pemisahan tugas',
   LOGIN: 'Masuk',
   LOGOUT: 'Keluar',
   LOGIN_FAILED: 'Gagal masuk',
@@ -352,4 +353,11 @@ export const PETTY_MOVEMENT_LABEL: Record<string, string> = {
   REFILL: 'Isi ulang dari Finance',
   EXPENSE: 'Biaya',
   EXPENSE_CANCEL: 'Biaya dibatalkan',
+}
+
+/** Jenis penyelesaian selisih kas (irisan 9): menentukan dampaknya ke laporan laba. */
+export const DISCREPANCY_CATEGORY_LABEL: Record<string, string> = {
+  STAFF: 'Ditanggung petugas',
+  BUSINESS: 'Kerugian usaha (mengurangi laba)',
+  RECORDING_ERROR: 'Salah hitung/catat, uang tidak hilang',
 }

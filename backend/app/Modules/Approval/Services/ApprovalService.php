@@ -15,6 +15,7 @@ use App\Modules\Inventory\Approvals\StockCountApproval;
 use App\Modules\Identity\Models\User;
 use App\Modules\Sales\Approvals\SaleRefundApproval;
 use App\Support\DocumentNumber;
+use App\Support\ControlBlocked;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -168,7 +169,7 @@ class ApprovalService
                 }
             }
             if ($request->requested_by === $approver->id) {
-                throw new AuthorizationException('Pengajuan tidak dapat diputuskan oleh pengajunya sendiri.');
+                throw new ControlBlocked('Pengajuan tidak dapat diputuskan oleh pengajunya sendiri.', ControlBlocked::SELF_DECISION, $request);
             }
             $this->ensureStatus($request, [ApprovalRequest::STATUS_PENDING], 'Pengajuan ini tidak sedang menunggu keputusan.');
 

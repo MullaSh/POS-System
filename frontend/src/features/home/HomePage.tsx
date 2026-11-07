@@ -4,6 +4,7 @@ import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { useApprovalSummary } from '@/features/approvals/queries'
 import { hasRole, useMe } from '@/features/auth/useAuth'
+import { OwnerDashboard } from '@/features/reports/OwnerDashboard'
 import { ROLE_LABEL } from '@/lib/format'
 
 export function HomePage() {
@@ -13,6 +14,15 @@ export function HomePage() {
   const summary = useApprovalSummary(isOwner || hasRole(user, 'FINANCE'))
   const waiting = summary.data?.data.waiting_my_decision ?? 0
   const returned = summary.data?.data.returned_to_me ?? 0
+
+  if (isOwner) {
+    return (
+      <div className="max-w-5xl">
+        <PageHeader title={`Selamat datang, ${user?.name ?? ''}`} purpose="Yang perlu Anda putuskan dan perhatikan hari ini, lalu ringkasan penjualan dan laba." />
+        <OwnerDashboard waiting={waiting} />
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -54,11 +64,12 @@ export function HomePage() {
         </CardContent>
       </Card>
 
-      <InfoBanner>
-        Aplikasi ini sedang dibangun bertahap. Yang sudah tersedia: stok gudang dan outlet (saldo awal, kartu stok, waste, stock opname, permintaan stok,
-        pengiriman dan retur), data barang dan harga jual menu, resep dan HPP, satuan, supplier, metode bayar, kategori biaya, gudang dan outlet, pengguna dan peran,
-        persetujuan, serta jejak audit. Kasir, produksi, pembelian, kas, dan laporan menyusul di tahap berikutnya.
-      </InfoBanner>
+      {hasRole(user, 'FINANCE') && (
+        <InfoBanner>
+          Semua laporan (laba rugi, penjualan, HPP, biaya, arus kas, rekonsiliasi kas, nilai dan pergerakan stok, produksi dan waste, pembelian, hutang) ada di menu{' '}
+          <Link to="/laporan" className="underline">Laporan</Link>.
+        </InfoBanner>
+      )}
     </div>
   )
 }

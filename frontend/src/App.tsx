@@ -1,4 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router'
+import {
+  CashFlowReportPage, CashReconReportPage, ExpenseReportPage, MenuHppReportPage, MovementReportPage, PayablesReportPage, ProductionWasteReportPage,
+  ProfitReportPage, PurchasingReportPage, ReportsIndexPage, SalesReportPage, ValuationReportPage,
+} from '@/features/reports/ReportPages'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ApprovalsPage } from '@/features/approvals/ApprovalsPage'
 import { AuditLogPage } from '@/features/audit/AuditLogPage'
@@ -93,6 +97,18 @@ export default function App() {
         <Route path="satuan" element={<RequireAuth role="OWNER"><UnitsPage /></RequireAuth>} />
         <Route path="lokasi" element={<RequireAuth role="OWNER"><LocationsPage /></RequireAuth>} />
         <Route path="pengguna" element={<RequireAuth role="OWNER"><UsersPage /></RequireAuth>} />
+        <Route path="laporan" element={<RequireAuth role={['OWNER', 'FINANCE']}><ReportsIndexPage /></RequireAuth>} />
+        <Route path="laporan/laba" element={<RequireAuth role={['OWNER', 'FINANCE']}><ProfitReportPage /></RequireAuth>} />
+        <Route path="laporan/penjualan" element={<RequireAuth role={['OWNER', 'FINANCE']}><SalesReportPage /></RequireAuth>} />
+        <Route path="laporan/hpp-menu" element={<RequireAuth role={['OWNER', 'FINANCE']}><MenuHppReportPage /></RequireAuth>} />
+        <Route path="laporan/biaya" element={<RequireAuth role={['OWNER', 'FINANCE']}><ExpenseReportPage /></RequireAuth>} />
+        <Route path="laporan/arus-kas" element={<RequireAuth role={['OWNER', 'FINANCE']}><CashFlowReportPage /></RequireAuth>} />
+        <Route path="laporan/rekonsiliasi-kas" element={<RequireAuth role={['OWNER', 'FINANCE']}><CashReconReportPage /></RequireAuth>} />
+        <Route path="laporan/nilai-stok" element={<RequireAuth role={['OWNER', 'FINANCE']}><ValuationReportPage /></RequireAuth>} />
+        <Route path="laporan/pergerakan-stok" element={<RequireAuth role={['OWNER', 'FINANCE']}><MovementReportPage /></RequireAuth>} />
+        <Route path="laporan/produksi-waste" element={<RequireAuth role={['OWNER', 'FINANCE']}><ProductionWasteReportPage /></RequireAuth>} />
+        <Route path="laporan/pembelian" element={<RequireAuth role={['OWNER', 'FINANCE']}><PurchasingReportPage /></RequireAuth>} />
+        <Route path="laporan/hutang" element={<RequireAuth role={['OWNER', 'FINANCE']}><PayablesReportPage /></RequireAuth>} />
         <Route path="jejak-audit" element={<RequireAuth role="OWNER"><AuditLogPage /></RequireAuth>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

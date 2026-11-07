@@ -8,6 +8,7 @@ use App\Modules\Catalog\Models\ExpenseCategory;
 use App\Modules\Catalog\Models\Item;
 use App\Modules\Catalog\Models\ItemMinStock;
 use App\Modules\Catalog\Models\Supplier;
+use App\Modules\Inventory\Models\StockEntry;
 use App\Modules\Inventory\Models\StockMovement;
 use App\Modules\Inventory\Models\StockTransfer;
 use App\Modules\Inventory\Services\StockEntryService;
@@ -70,6 +71,9 @@ class DemoDataSeeder extends Seeder
         }
         if (! ProductionOrder::query()->exists()) {
             $this->seedProduction();
+        }
+        if (! StockEntry::query()->where('kind', StockEntry::KIND_WASTE)->exists()) {
+            $this->seedReports();
         }
     }
 
@@ -429,5 +433,21 @@ class DemoDataSeeder extends Seeder
             $production->plan(['output_item_id' => $dimsum->id, 'unit_id' => $unit('pak'), 'qty' => 6, 'stock_request_id' => $request->id,
                 'planned_date' => now()->addDay()->toDateString(), 'notes' => 'Contoh rencana untuk permintaan Outlet 2'], $gudang);
         });
+    }
+
+    /** Irisan 9: satu waste di gudang agar laporan kerugian stok dan daftar pengawasan Owner berisi contoh. */
+    private function seedReports(): void
+    {
+        $gudang = User::query()->where('username', 'gudang1')->first();
+        $warehouse = Location::query()->where('type', Location::TYPE_WAREHOUSE)->first();
+        $lumpia = Item::query()->where('code', 'SJ-LUMPIA')->first();
+        $pcs = Unit::query()->where('code', 'pcs')->value('id');
+        if (! $gudang || ! $warehouse || ! $lumpia || ! $pcs || ! StockMovement::query()->where(['item_id' => $lumpia->id, 'location_id' => $warehouse->id])->exists()) {
+            return;
+        }
+        DB::transaction(fn () => app(StockEntryService::class)->waste([
+            'location_id' => $warehouse->id, 'reason_code' => 'DAMAGED', 'notes' => 'Contoh: kemasan sobek di freezer',
+            'lines' => [['item_id' => $lumpia->id, 'unit_id' => $pcs, 'qty' => 5]],
+        ], $gudang));
     }
 }

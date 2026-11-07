@@ -1,4 +1,4 @@
-import { ArrowRightLeft, Factory, FileText, HandCoins, PackageCheck, BookOpen, Landmark, Scale, Wallet, Boxes, ClipboardCheck, ClipboardList, Clock, CreditCard, History, Home, MapPin, PackageMinus, PackageSearch, Receipt, ReceiptText, Ruler, Send, ShoppingCart, Truck, UserCheck, Users, Warehouse } from 'lucide-react'
+import { ArrowRightLeft, BarChart3, Factory, FileText, HandCoins, PackageCheck, BookOpen, Landmark, Scale, Wallet, Boxes, ClipboardCheck, ClipboardList, Clock, CreditCard, History, Home, MapPin, PackageMinus, PackageSearch, Receipt, ReceiptText, Ruler, Send, ShoppingCart, Truck, UserCheck, Users, Warehouse } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { RoleCode } from '@/lib/types'
 
@@ -21,6 +21,7 @@ export const NAV: NavGroup[] = [
     items: [
       { to: '/', label: 'Beranda', icon: Home },
       { to: '/persetujuan', label: 'Persetujuan', icon: ClipboardCheck, roles: ['OWNER', 'FINANCE'], badge: 'approvals', orApprover: true },
+      { to: '/laporan', label: 'Laporan', icon: BarChart3, roles: ['OWNER', 'FINANCE'] },
     ],
   },
   {

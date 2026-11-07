@@ -13,7 +13,7 @@ import { EmptyRow, Table, Td, Th } from '@/components/ui/table'
 import { hasRole, useMe } from '@/features/auth/useAuth'
 import { ApiError, errorText, http } from '@/lib/api'
 import {
-  EXPENSE_STATUS_LABEL, HANDOVER_STAGE_LABEL, PETTY_MOVEMENT_LABEL, formatDate, formatDateTime, formatRupiah, formatSignedRupiah,
+  DISCREPANCY_CATEGORY_LABEL, EXPENSE_STATUS_LABEL, HANDOVER_STAGE_LABEL, PETTY_MOVEMENT_LABEL, formatDate, formatDateTime, formatRupiah, formatSignedRupiah,
 } from '@/lib/format'
 import type { CashHandover, CashOverview, Discrepancy, Expense, HandoverPending, Location, Paginated, PettyCash, ReconciliationRow, SimpleMaster } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -578,8 +578,9 @@ export function DiscrepanciesPage() {
 function DiscrepancyCard({ d, canResolve }: { d: Discrepancy; canResolve: boolean }) {
   const qc = useQueryClient()
   const [decision, setDecision] = useState('')
+  const [category, setCategory] = useState('')
   const save = useMutation({
-    mutationFn: () => http.post('/cash/discrepancies/resolve', { subject_type: d.subject_type, subject_id: d.subject_id, decision }),
+    mutationFn: () => http.post('/cash/discrepancies/resolve', { subject_type: d.subject_type, subject_id: d.subject_id, decision, category }),
     onSuccess: () => qc.invalidateQueries({ queryKey: CASH_KEY }),
   })
   const err = save.error instanceof ApiError ? save.error : null
@@ -595,16 +596,24 @@ function DiscrepancyCard({ d, canResolve }: { d: Discrepancy; canResolve: boolea
         </div>
         {d.explanation && <p>Penjelasan: {d.explanation}</p>}
         {d.resolution ? (
-          <p>Keputusan {d.resolution.by} ({formatDateTime(d.resolution.at)}): <span className="font-medium">{d.resolution.decision}</span></p>
+          <p>Keputusan {d.resolution.by} ({formatDateTime(d.resolution.at)}): <span className="font-medium">{DISCREPANCY_CATEGORY_LABEL[d.resolution.category ?? ''] ?? 'Tanpa kategori'}</span> — {d.resolution.decision}</p>
         ) : canResolve ? (
           <form className="flex flex-wrap items-start gap-2" onSubmit={(e) => { e.preventDefault(); save.mutate() }}>
+            <div className="w-64">
+              <Field id={`dk-${d.subject_type}-${d.subject_id}`} label="Jenis penyelesaian" error={err?.field('category')}>
+                <Select id={`dk-${d.subject_type}-${d.subject_id}`} value={category} onChange={(e) => setCategory(e.target.value)}>
+                  <option value="">Pilih…</option>
+                  {Object.entries(DISCREPANCY_CATEGORY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </Select>
+              </Field>
+            </div>
             <div className="min-w-64 flex-1">
-              <Field id={`dc-${d.subject_type}-${d.subject_id}`} label="Keputusan penyelesaian" error={err?.field('decision')}>
-                <Input id={`dc-${d.subject_type}-${d.subject_id}`} value={decision} onChange={(e) => setDecision(e.target.value)} placeholder="mis. ditanggung kasir, dicatat sebagai kerugian, salah hitung" />
+              <Field id={`dc-${d.subject_type}-${d.subject_id}`} label="Catatan keputusan" error={err?.field('decision')}>
+                <Input id={`dc-${d.subject_type}-${d.subject_id}`} value={decision} onChange={(e) => setDecision(e.target.value)} placeholder="mis. dipotong dari uang makan kasir A" />
               </Field>
             </div>
             <Button type="submit" className="md:mt-[24px]" disabled={save.isPending}>Simpan keputusan</Button>
-            {err && !err.field('decision') && <p className="w-full text-destructive">{Object.values(err.errors)[0]?.[0] ?? err.message}</p>}
+            {err && !err.field('decision') && !err.field('category') && <p className="w-full text-destructive">{Object.values(err.errors)[0]?.[0] ?? err.message}</p>}
           </form>
         ) : <p className="text-muted-foreground">Menunggu keputusan Finance.</p>}
       </CardContent>
