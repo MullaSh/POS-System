@@ -637,7 +637,7 @@ export type Discrepancy = {
   explanation: string | null
   at: string
   link: string
-  resolution: { decision: string; by: string | null; at: string } | null
+  resolution: { decision: string; category: string | null; by: string | null; at: string } | null
 }
 
 // --- Pembelian (irisan 7) ---

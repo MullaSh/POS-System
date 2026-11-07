@@ -28,6 +28,16 @@ async function session(username, shots) {
 }
 
 await session('owner', [
+  ['beranda', '/'],
+  ['laporan', '/laporan'],
+  ['laba', '/laporan/laba'],
+  ['penjualan-laporan', '/laporan/penjualan'],
+  ['hpp-menu', '/laporan/hpp-menu'],
+  ['arus-kas', '/laporan/arus-kas'],
+  ['rekonsiliasi-kas', '/laporan/rekonsiliasi-kas'],
+  ['nilai-stok', '/laporan/nilai-stok'],
+  ['pergerakan-stok', '/laporan/pergerakan-stok'],
+  ['produksi-waste', '/laporan/produksi-waste'],
   ['stok-gudang', '/stok'],
   ['kartu-stok', '/stok/kartu', null],
   ['persetujuan', '/persetujuan'],
@@ -41,6 +51,10 @@ await session('owner', [
   ['produksi-selesai', '/produksi/1'],
 ])
 await session('finance1', [
+  ['beranda', '/'],
+  ['biaya-laporan', '/laporan/biaya'],
+  ['pembelian-laporan', '/laporan/pembelian'],
+  ['hutang-laporan', '/laporan/hutang'],
   ['persetujuan', '/persetujuan'],
   ['kas', '/kas'],
   ['petty-cash', '/kas', 'a[href^="/kas/petty-cash"]'],
