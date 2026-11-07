@@ -65,6 +65,11 @@ hari, satu produksi Frozen Dimsum yang sudah selesai (hasil baik 96 pcs, gagal
 4 pcs), dan satu permintaan besar dari Outlet 2 yang stok gudangnya kurang,
 dengan rencana produksi untuknya (untuk diselesaikan `gudang1`).
 
+Data contoh laporan: satu waste 5 pcs Frozen Lumpia di Gudang Pusat, supaya
+laporan kerugian stok dan daftar pengawasan di beranda `owner` berisi contoh.
+Laporan ada di menu **Laporan** (akun `owner` dan `finance1`); semua angka
+dihitung dari data contoh di atas.
+
 Nama outlet dan barang adalah contoh. Di server sungguhan, data contoh tidak
 dipasang; akun `owner` memakai kata sandi sementara yang wajib diganti saat
 pertama masuk.
@@ -104,4 +109,4 @@ menyentuh kode).
 | 6 | Kas: ringkasan tiga dana per outlet, serah terima Outlet → Gudang → Finance dengan konfirmasi dan bukti selisih, Petty Cash dan biaya (isi ulang sebesar biaya terbukti), pencocokan non-tunai harian, keputusan selisih oleh Finance | Selesai |
 | 7 | Pembelian: Purchase Request gudang (disetujui Finance), Purchase Order oleh Finance (di atas batas disetujui Owner; gudang tidak melihat harga), penerimaan bertahap dengan QC Incoming, tagihan per penerimaan dengan alasan bila beda harga, pembayaran sebagian dan daftar hutang per jatuh tempo | Selesai |
 | 8 | Produksi: Production Order dua langkah (rencana → selesai), dibuat dari permintaan stok yang kurang atau tanpa permintaan; bahan kurang langsung jadi PR terisi; selesai dengan hasil baik/gagal per alasan (QC Production), pemakaian bahan sebenarnya, harga pokok hasil dari bahan terpakai, batch = nomor produksi dengan kedaluwarsa dari umur simpan; toleransi varians diatur Owner | Selesai |
-| 9 | Laporan dan dashboard Owner | Berikutnya |
+| 9 | Laporan (laba rugi per outlet, penjualan, HPP per menu, biaya, arus kas, rekonsiliasi kas, nilai dan pergerakan stok, produksi/waste/varians, pembelian, hutang) untuk Owner dan Finance; beranda Owner (persetujuan, perlu perhatian, penjualan, laba bulan ini, pengawasan 7 hari); jenis penyelesaian selisih kas; percobaan yang ditolak kontrol tercatat di jejak audit | Selesai |

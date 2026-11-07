@@ -87,9 +87,11 @@ export function OwnerDashboard({ waiting }: { waiting: number }) {
 
       {/* 3. Penjualan per outlet */}
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle className="text-base">Penjualan per outlet</CardTitle>
-          <Link to="/laporan/penjualan" className="text-sm text-muted-foreground hover:underline">Laporan lengkap</Link>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-base">Penjualan per outlet</CardTitle>
+            <Link to="/laporan/penjualan" className="text-sm text-muted-foreground hover:underline">Laporan lengkap</Link>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -118,7 +120,7 @@ export function OwnerDashboard({ waiting }: { waiting: number }) {
         <div className="grid gap-3 md:grid-cols-4">
           <Kpi label="Penjualan bersih" value={rp(d.profit.net_sales)} />
           <Kpi label="Laba kotor" value={rp(d.profit.gross_profit)} hint={`HPP ${minus(d.profit.hpp)}`} tone={profitTone(d.profit.gross_profit)} />
-          <Kpi label="Biaya + kerugian" value={minus(d.profit.expenses + d.profit.stock_loss + d.profit.other_loss)}
+          <Kpi label="Biaya + kerugian" value={rp(d.profit.expenses + d.profit.stock_loss + d.profit.other_loss)}
             hint={`biaya ${rp(d.profit.expenses)} · kerugian stok ${rp(d.profit.stock_loss)}`} />
           <Kpi label="Laba bersih" value={rp(d.profit.net_profit)} tone={profitTone(d.profit.net_profit)} />
         </div>
@@ -129,9 +131,11 @@ export function OwnerDashboard({ waiting }: { waiting: number }) {
 
       {/* 5. Pengawasan audit */}
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle className="text-base">Pengawasan {d.watch.days} hari terakhir</CardTitle>
-          <Link to="/jejak-audit" className="text-sm text-muted-foreground hover:underline">Jejak audit</Link>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-base">Pengawasan {d.watch.days} hari terakhir</CardTitle>
+            <Link to="/jejak-audit" className="text-sm text-muted-foreground hover:underline">Jejak audit</Link>
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           {watchTotal === 0 ? <p className="text-sm text-muted-foreground">Tidak ada kejadian yang perlu diawasi.</p> : (
