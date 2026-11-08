@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 
-/* Token warna dasar (gaya shadcn/ui). Layar mengikuti mode terang/gelap sistem. */
+/* Varian dark: hanya aktif bila ada kelas .dark (tidak pernah dipasang), jadi aplikasi selalu tampil terang
+   apa pun pengaturan Windows atau browser. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Token warna dasar (gaya shadcn/ui). Aplikasi hanya memakai mode terang. */
 @theme {
   --color-background: #ffffff;
   --color-foreground: #0f172a;
@@ -18,20 +22,8 @@
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: #0b1120;
-    --color-foreground: #e2e8f0;
-    --color-muted: #1e293b;
-    --color-muted-foreground: #94a3b8;
-    --color-border: #1e293b;
-    --color-input: #334155;
-    --color-primary: #e2e8f0;
-    --color-primary-foreground: #0f172a;
-    --color-destructive: #f87171;
-    --color-destructive-foreground: #450a0a;
-    --color-success: #4ade80;
-  }
+:root {
+  color-scheme: light;
 }
 
 body {

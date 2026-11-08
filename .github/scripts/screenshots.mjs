@@ -7,7 +7,7 @@ const out = process.argv[2] ?? 'screenshots'
 const browser = await chromium.launch()
 
 async function session(username, shots) {
-  const page = await browser.newPage({ viewport: { width: 1400, height: 900 } })
+  const page = await browser.newPage({ viewport: { width: 1400, height: 900 }, colorScheme: 'dark' })
   await page.goto(`${base}/login`)
   await page.fill('#username', username)
   await page.fill('#password', 'demo12345')
