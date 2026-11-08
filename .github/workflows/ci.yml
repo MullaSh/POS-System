@@ -2,7 +2,7 @@ name: Tes otomatis
 
 on:
   push:
-    branches: [main, 'irisan-*']
+    branches: [main, 'irisan-*', demo-slide-2]
   pull_request:
   workflow_dispatch:
 
