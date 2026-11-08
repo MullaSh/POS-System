@@ -12,12 +12,15 @@ export type NavItem = {
   /** Tampilkan juga bila user dapat memutuskan persetujuan lewat delegasi (2E-Q2). */
   orApprover?: boolean
 }
-type NavGroup = { title: string; items: NavItem[] }
+/** pinned: kelompok selalu terbuka (tanpa tombol buka-tutup). */
+export type NavGroup = { title: string; items: NavItem[]; pinned?: boolean }
 
-/** Menu dikelompokkan per proses bisnis; tiap peran hanya melihat menunya (REC, Master §17). */
+/** Menu dikelompokkan per proses bisnis; tiap peran hanya melihat menunya (REC, Master §17).
+ *  Kelompok selain Umum bisa dibuka-tutup; kelompok halaman yang sedang dibuka otomatis terbuka. */
 export const NAV: NavGroup[] = [
   {
     title: 'Umum',
+    pinned: true,
     items: [
       { to: '/', label: 'Beranda', icon: Home },
       { to: '/persetujuan', label: 'Persetujuan', icon: ClipboardCheck, roles: ['OWNER', 'FINANCE'], badge: 'approvals', orApprover: true },

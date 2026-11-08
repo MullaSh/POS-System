@@ -82,6 +82,7 @@ describe('Persetujuan', () => {
     renderWithProviders(<App />, '/')
 
     const nav = await screen.findByRole('navigation', { name: 'Menu utama' })
+    await userEvent.setup().click(within(nav).getByRole('button', { name: 'Data master' }))
     expect(within(nav).getByRole('link', { name: 'Supplier' })).toBeInTheDocument()
     expect(within(nav).getByRole('link', { name: 'Persetujuan' })).toBeInTheDocument()
     expect(within(nav).queryByRole('link', { name: 'Satuan' })).not.toBeInTheDocument()
