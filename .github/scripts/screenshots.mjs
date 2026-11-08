@@ -41,6 +41,7 @@ await session('owner', [
   ['pengguna', '/pengguna'],
   ['barang-ayam', '/barang', 'tbody a:has-text("Daging Ayam")'],
   ['resep-detail', '/resep', 'tbody a:has-text("Dimsum Mentai")'],
+  ['jejak-audit', '/jejak-audit'],
   ['laporan', '/laporan'],
   ['laba', '/laporan/laba'],
   ['penjualan-laporan', '/laporan/penjualan'],
